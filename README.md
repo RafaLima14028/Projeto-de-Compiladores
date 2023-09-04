@@ -1,1 +1,1 @@
-<h1 aling="center">Projeto de Compiladores</h1>
+<h1 align="center">Projeto de Compiladores</h1>
