@@ -1,3 +1,4 @@
+import re
 import tabela
 
 arquivo = None
@@ -21,9 +22,28 @@ tabela_transicao = {
         '/': '14',
         '^': '15',
         '{': '16',
-        "'": '18'
+        "'": '18',
+        'letra_': '21',
+        'digito': '23',
+        ')': '32',
+        '(': '33',
+        ':': '34',
+        ';': '37',
+        ',': '38',
+        'ws': '39'
     }
 }
+
+
+def tipo_char(char: str) -> str:
+    if re.match(r'[0-9]', char):
+        return 'digito'
+    elif re.match(r'[a-zA-Z_]', char):
+        return 'letra_'
+    elif re.match(r"[ \t\n]", char):
+        return 'ws'
+    else:
+        return char
 
 
 def abre_arquivo(caminho: str) -> None:
@@ -122,8 +142,10 @@ def final(estado: str) -> bool:
 
 
 def move(estado: str, char: str) -> str:
-    if estado in tabela_transicao and char in tabela_transicao[estado]:
-        return tabela_transicao[estado][char]
+    tipo_do_char = tipo_char(char)
+
+    if estado in tabela_transicao and tipo_do_char in tabela_transicao[estado]:
+        return tabela_transicao[estado][tipo_do_char]
     else:
         return '-1'
 
