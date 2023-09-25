@@ -1,46 +1,16 @@
-import re
-import tabela
+import tabela_de_simbolos as tabela
+from tabela_de_transicao import tabela_transicao, estados_finais
 
 arquivo = None
 nome_id = None
 
-estados_finais = [
-    '2', '4', '5', '7', '8', '10', '11', '12', '13', '14', '15',
-    '17', '20', '22', '24', '27', '31', '32', '33', '35', '36',
-    '37', '38', '40'
-]
-
-tabela_transicao = {
-    '1': {
-        '=': '2',
-        '>': '3',
-        '<': '6',
-        '!': '9',
-        '+': '11',
-        '-': '12',
-        '*': '13',
-        '/': '14',
-        '^': '15',
-        '{': '16',
-        "'": '18',
-        'letra_': '21',
-        'digito': '23',
-        ')': '32',
-        '(': '33',
-        ':': '34',
-        ';': '37',
-        ',': '38',
-        'ws': '39'
-    }
-}
-
 
 def tipo_char(char: str) -> str:
-    if re.match(r'[0-9]', char):
+    if char.isdigit():
         return 'digito'
-    elif re.match(r'[a-zA-Z_]', char):
+    elif char.isalpha() or char == '_':
         return 'letra_'
-    elif re.match(r"[ \t\n]", char):
+    elif char == ' ' or char == '\t' or char == '\n':
         return 'ws'
     else:
         return char
@@ -128,45 +98,65 @@ def prox_char() -> str:
 
     char = arquivo.read(1)
 
-    if char:
+    if char != '':
         return char
     else:
         return 'EOF'
 
 
-def final(estado: str) -> bool:
+def final(estado: int) -> bool:
     if estado in estados_finais:
         return True
     else:
         return False
 
 
-def move(estado: str, char: str) -> str:
+def move(estado: int, char: str) -> str | int:
     tipo_do_char = tipo_char(char)
+
+    outros = 'outros'
 
     if estado in tabela_transicao and tipo_do_char in tabela_transicao[estado]:
         return tabela_transicao[estado][tipo_do_char]
+    elif estado in tabela_transicao and outros in tabela_transicao[estado]:
+        return tabela_transicao[estado][outros]
     else:
-        return '-1'
+        return -1
+
+
+def estado_inicial() -> int:
+    return 1
+
+
+def acoes(estado: int) -> None:
+    if final(estado):
+        print(tabela_transicao[estado]())
 
 
 def getToken() -> None:
     global nome_id
 
     print_estado = True
-    estado = "1"
+    estado = estado_inicial()
     char = prox_char()
 
-    while char != 'EOF' and not final(estado) and estado != '-1':
+    if print_estado:
+        print(f'O estado atual é: {estado}')
+        print(f'O caractere atual é: {char}')
+        print()
+
+    while char != 'EOF' and not final(estado) and estado != -1:
         estado = move(estado, char)
         char = prox_char()
 
         if print_estado:
             print(f'O estado atual é: {estado}')
             print(f'O caractere atual é: {char}')
+            print()
 
-    if final(estado):
+    if final(estado) and estado != '-1':
         print('Cadeia aceita')
+        acoes(estado)
     else:
         print('Cadeia rejeitada')
 
