@@ -130,7 +130,12 @@ def estado_inicial() -> int:
 
 def acoes(estado: int) -> None:
     if final(estado):
-        print(tabela_transicao[estado]())
+        tipo, valor, eh_lookhead = tabela_transicao[estado]()
+
+        print(tipo, valor)
+
+        if eh_lookhead:
+            lookhead()
 
 
 def getToken() -> None:
@@ -154,7 +159,7 @@ def getToken() -> None:
             print(f'O caractere atual é: {char}')
             print()
 
-    if final(estado) and estado != '-1':
+    if final(estado) and estado != -1:
         print('Cadeia aceita')
         acoes(estado)
     else:

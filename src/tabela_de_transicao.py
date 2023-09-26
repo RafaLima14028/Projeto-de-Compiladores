@@ -50,13 +50,13 @@ tabela_transicao = {
     2: return_oprel_eq,
     3: {
         '=': 4,
-        'outros': 5  # Não está entrando
+        'outros': 5
     },
     4: return_oprel_ge,
     5: return_oprel_gt,
     6: {
         '=': 7,
-        'outros': 8  # Não está entrando
+        'outros': 8
     },
     7: return_oprel_le,
     8: return_oprel_lt
