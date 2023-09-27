@@ -1,5 +1,4 @@
 import tabela_de_simbolos as tabela
-import tabela_de_simbolos_metodos as funcs
 
 arquivo = None
 nome_id = None
@@ -45,19 +44,19 @@ def setId() -> None:
 
     if item is None:
         tabela.tabela_de_simbolos[item] = ('id', '', '')
-        return None, None, None
+        ...
         # TODO: RETORNAR OS VALORES
     else:
         if item[0] == 'id':  # Não está reservado, mas está presente na tabela
-            return None, None, None
+            ...
             # TODO: RETORNAR OS VALORES
         else:  # É reservado
-            return None, None, None
+            ...
             # TODO: RETORNAR OS VALORES
 
 
 def setChar() -> None:
-    ...
+    global nome_id
 
 
 estados_finais = [
@@ -88,13 +87,13 @@ tabela_transicao = {
         ',': 38,
         'ws': 39
     },
-    2: funcs.return_oprel_eq,
+    2: ('oprel', 'EQ', False),
     3: {
         '=': 4,
         'outros': 5
     },
-    4: setId,
-    5: setId,
+    4: ('oprel', 'GE', False),
+    5: ('oprel', 'GT', True),
     6: {
         '=': 7,
         'outros': 8
@@ -108,6 +107,19 @@ tabela_transicao = {
     },
     22: setId
 }
+
+
+def acoes(estado: int) -> None:
+    retorno_estado_final = tabela_transicao[estado]
+
+    if type(retorno_estado_final) is tuple:
+        tipo, valor, faz_lookhead = retorno_estado_final
+        print(tipo, valor, faz_lookhead)
+
+        if faz_lookhead:
+            lookhead()
+    else:
+        print('É uma função')
 
 
 def tipo_char(char: str) -> str:
@@ -167,6 +179,8 @@ def final(estado: int) -> bool:
 def move(estado: int, char: str) -> int:
     tipo_do_char = tipo_char(char)
 
+    print(tipo_do_char)
+
     outros = 'outros'
 
     if estado in tabela_transicao and tipo_do_char in tabela_transicao[estado]:
@@ -181,12 +195,10 @@ def estado_inicial() -> int:
     return 1
 
 
-def acoes(estado: int) -> None:
-    print(tabela_transicao[estado]())
-
-
 def getToken() -> None:
     global nome_id
+
+    nome_id = ''
 
     print_estado = True
     estado = estado_inicial()
@@ -195,25 +207,29 @@ def getToken() -> None:
     if print_estado:
         print(f'O estado atual é: {estado}')
         print(f'O caractere atual é: {char}')
-        print()
 
     while char != 'EOF' and not final(estado) and estado != -1:
+        nome_id += char
+
         estado = move(estado, char)
         char = prox_char()
 
         if print_estado:
+            print()
             print(f'O estado atual é: {estado}')
             print(f'O caractere atual é: {char}')
-            print()
 
-    # if char == 'EOF':
-    #     estado = move(estado, char)
+    print()
 
+    if not final(estado) and char == 'EOF' and estado != -1:
+        estado = move(estado, char)
     if final(estado):
         print('Cadeia aceita')
         acoes(estado)
     else:
         print('Cadeia rejeitada')
+
+    print(nome_id)
 
 
 if __name__ == '__main__':
