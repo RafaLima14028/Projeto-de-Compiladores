@@ -1,1 +1,10 @@
-=rafa
+program teste()
+begin
+    int: a;
+
+    a := 10;
+
+    'B'
+
+    { }
+end
