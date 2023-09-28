@@ -101,6 +101,7 @@ tabela_transicao = {
         '^': 15,
         '{': 16,
         "'": 18,
+        'letra': 21,
         'letra_': 21,
         'ex': 21,
         'digito': 23,
@@ -138,20 +139,23 @@ tabela_transicao = {
         'outros': 16
     },
     17: ('', '', False),
-    # TODO: IMPLEMENTAR O NÓ 18
-    # 18: {
-    #     '\\': 18,
-    #     'outros': 19
-    # },
+    -18: {
+        'letra': 19
+    },
+    18: {
+        '\\': -18,
+        'outros': 19
+    },
     19: {
         "'": 20
     },
     20: [setChar],
     21: {
+        'letra': 21,
         'letra_': 21,
         'digito': 21,
         'ex': 21,
-        'ws': 22
+        'outros': 22
     },
     22: [setId, lookhead],
     23: {
@@ -242,10 +246,12 @@ def tipo_char(char: str) -> str:
         return char
     elif char.isdigit():
         return 'digito'
-    elif char.isalpha() or char == '_':
+    elif char.isalpha():
         if char == 'E':
             return 'ex'
 
+        return 'letra'
+    elif char == '_':
         return 'letra_'
     elif char == ' ' or char == '\t' or char == '\n':
         return 'ws'
