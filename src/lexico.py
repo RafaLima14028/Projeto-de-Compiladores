@@ -1,7 +1,13 @@
+from typing import Tuple
+
 import tabela_de_simbolos as tabela
 
 arquivo = None
-nome_id = None
+nome_id = ''
+linha = 1
+coluna = 1
+linha_inicio_token = 0
+coluna_inicio_token = 0
 
 
 def abre_arquivo(caminho: str) -> None:
@@ -24,40 +30,48 @@ def abre_arquivo(caminho: str) -> None:
 
 
 def lookhead() -> None:
+    global coluna
+
+    if coluna > 1:
+        coluna -= 1
+
     arquivo.seek(arquivo.tell() - 1, 0)
 
 
-def setInt() -> None:
-    global nome_id
+def setInt() -> (str, str, (int, int)):
+    global nome_id, linha_inicio_token, coluna_inicio_token
 
     item = tabela.tabela_de_simbolos.get(nome_id)
 
     if item is None:
         tabela.tabela_de_simbolos[nome_id] = ('numero', int(nome_id), 'int')
 
-    # TODO: RETORNAR OS VALORES
+    return 'numero', nome_id, (linha_inicio_token, coluna_inicio_token)
 
 
-def setFrac() -> None:
-    global nome_id
+def setFrac() -> (str, str, (int, int)):
+    global nome_id, linha_inicio_token, coluna_inicio_token
 
     item = tabela.tabela_de_simbolos.get(nome_id)
 
     if item is None:
         tabela.tabela_de_simbolos[nome_id] = ('numero', float(nome_id), 'float')
 
-    # TODO: RETORNAR OS VALORES
+    return 'numero', nome_id, (linha_inicio_token, coluna_inicio_token)
 
 
-def setExp() -> None:
-    global nome_id
+def setExp() -> (str, str, (int, int)):
+    global nome_id, linha_inicio_token, coluna_inicio_token
+
+    numero = nome_id.split('E')
+    numero = float(numero[0]) * pow(10, float(numero[1]))
 
     item = tabela.tabela_de_simbolos.get(nome_id)
 
     if item is None:
-        ...
+        tabela.tabela_de_simbolos[nome_id] = ('numero', numero, 'float')
 
-    # TODO: RETORNAR OS VALORES
+    return 'numero', nome_id, (linha_inicio_token, coluna_inicio_token)
 
 
 def setId() -> None:
@@ -221,8 +235,8 @@ def acoes(estado: int) -> None:
             lookhead()
     else:
         for func in retorno_estado_final:
-            # func()
-            print(func)
+            func()
+            # print(func)
 
 
 def prox_char() -> str:
@@ -253,7 +267,13 @@ def tipo_char(char: str) -> str:
         return 'letra'
     elif char == '_':
         return 'letra_'
-    elif char == ' ' or char == '\t' or char == '\n':
+    elif char == ' ' or char == '\t':
+        return 'ws'
+    elif char == '\n':
+        global linha, coluna
+        linha += 1
+        coluna = 1
+
         return 'ws'
     else:
         return char
@@ -262,14 +282,18 @@ def tipo_char(char: str) -> str:
 def move(estado: int, char: str) -> int:
     tipo_do_char = tipo_char(char)
 
-    print(tipo_do_char)
-
     outros = 'outros'
 
     if estado in tabela_transicao and tipo_do_char in tabela_transicao[estado]:
         return tabela_transicao[estado][tipo_do_char]
     elif estado in tabela_transicao and outros in tabela_transicao[estado]:
-        return tabela_transicao[estado][outros]
+        valor = tabela_transicao[estado][outros]
+
+        if final(valor) and char == '\n':
+            global linha
+            linha -= 1
+
+        return valor
     else:
         return -1
 
@@ -279,25 +303,30 @@ def estado_inicial() -> int:
 
 
 def getToken() -> None:
-    global nome_id
+    global nome_id, linha, coluna, \
+        linha_inicio_token, coluna_inicio_token
 
     nome_id = ''
+    coluna_inicio_token = coluna
+    linha_inicio_token = linha
 
-    print_estado = True
+    print_estado = False
     estado = estado_inicial()
     char = prox_char()
 
     while char != 'EOF' and estado != -1:
+        coluna += 1
+
         if print_estado:
             print(f'O estado atual é: {estado}')
             print(f'O caractere atual é: {char}')
             print()
 
         estado = move(estado, char)
+        # print(f'Nome_id atual: {nome_id}')
 
         if not final(estado):
             nome_id += char
-            # print(f'Nome_id atual: {nome_id}')
 
         if final(estado):
             break
@@ -313,17 +342,18 @@ def getToken() -> None:
     if final(estado):
         print('Cadeia aceita')
         acoes(estado)
+        print(f'id: {nome_id}, linha: {linha_inicio_token} e coluna: {coluna_inicio_token}')
     else:
-        print('Cadeia rejeitada')
-
-    print(nome_id)
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}'
+        )
 
 
 if __name__ == '__main__':
     # abre_arquivo('testes/teste01.txt')
     abre_arquivo('testes/teste02.txt')
 
-    # for i in range(25):
+    # for i in range(26):
     getToken()
     # print()
 
