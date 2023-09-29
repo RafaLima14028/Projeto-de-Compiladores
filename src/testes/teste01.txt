@@ -1,10 +1,29 @@
 program teste()
 begin
     int: a;
+    float: b;
+    char: rafael, lenovo;
 
     a := 10;
 
-    'B'
-
+    >
+    >=
+    <
+    <=
+    =
+    !=
+    +
+    -
+    *
+    /
+    ^
     { Rafael alves }
+    'B'
+    'R'
+    12
+    124.24
+    1.4E-12
+    4.5E+10
+    '\t'
+    '\n'
 end

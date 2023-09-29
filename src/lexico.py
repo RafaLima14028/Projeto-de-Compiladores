@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import tabela_de_simbolos as tabela
 
 arquivo = None
@@ -74,26 +72,32 @@ def setExp() -> (str, str, (int, int)):
     return 'numero', nome_id, (linha_inicio_token, coluna_inicio_token)
 
 
-def setId() -> None:
-    global nome_id
+def setId() -> (str, str, (int, int)):
+    global nome_id, linha_inicio_token, coluna_inicio_token
 
     item = tabela.tabela_de_simbolos.get(nome_id)
 
     if item is None:
         tabela.tabela_de_simbolos[item] = ('id', '', '')
-        ...
-        # TODO: RETORNAR OS VALORES
+        return 'id', nome_id, (linha_inicio_token, coluna_inicio_token)
     else:
         if item[0] == 'id':  # Não está reservado, mas está presente na tabela
-            ...
-            # TODO: RETORNAR OS VALORES
+            return 'id', nome_id, (linha_inicio_token, coluna_inicio_token)
         else:  # É reservado
-            ...
-            # TODO: RETORNAR OS VALORES
+            return nome_id, '-', (linha_inicio_token, coluna_inicio_token)
 
 
-def setChar() -> None:
-    global nome_id
+def setChar() -> (str, str, (int, int)):
+    global nome_id, linha_inicio_token, coluna_inicio_token
+
+    # nome_id_split = nome_id.split("'")
+
+    item = tabela.tabela_de_simbolos.get(nome_id)
+
+    if item is None:
+        tabela.tabela_de_simbolos[nome_id] = ('caractere', nome_id, 'char')
+
+    return 'caractere', nome_id, (linha_inicio_token, coluna_inicio_token)
 
 
 estados_finais = [
@@ -153,12 +157,15 @@ tabela_transicao = {
         'outros': 16
     },
     17: ('', '', False),
-    -18: {
+    -18: {  # Nó extra
         'letra': 19
     },
     18: {
         '\\': -18,
-        'outros': 19
+        'digito': 19,
+        'letra': 19,
+        'letra_': 19,
+        'ws': 19
     },
     19: {
         "'": 20
@@ -225,18 +232,11 @@ def acoes(estado: int) -> None:
     if type(retorno_estado_final) is tuple:
         tipo, valor, faz_lookhead = retorno_estado_final
 
-        if tipo == '':
-            tipo = None
-        if valor == '':
-            valor = None
-        print(tipo, valor, faz_lookhead)
-
         if faz_lookhead:
             lookhead()
     else:
         for func in retorno_estado_final:
             func()
-            # print(func)
 
 
 def prox_char() -> str:
@@ -249,10 +249,7 @@ def prox_char() -> str:
 
 
 def final(estado: int) -> bool:
-    if estado in estados_finais:
-        return True
-    else:
-        return False
+    return estado in estados_finais
 
 
 def tipo_char(char: str) -> str:
@@ -282,18 +279,20 @@ def tipo_char(char: str) -> str:
 def move(estado: int, char: str) -> int:
     tipo_do_char = tipo_char(char)
 
-    outros = 'outros'
+    if estado in tabela_transicao:
+        if tipo_do_char in tabela_transicao[estado]:
+            global nome_id
+            nome_id += char
 
-    if estado in tabela_transicao and tipo_do_char in tabela_transicao[estado]:
-        return tabela_transicao[estado][tipo_do_char]
-    elif estado in tabela_transicao and outros in tabela_transicao[estado]:
-        valor = tabela_transicao[estado][outros]
+            return tabela_transicao[estado][tipo_do_char]
+        elif 'outros' in tabela_transicao[estado]:
+            valor = tabela_transicao[estado]['outros']
 
-        if final(valor) and char == '\n':
-            global linha
-            linha -= 1
+            if final(valor) and char == '\n':
+                global linha
+                linha -= 1
 
-        return valor
+            return valor
     else:
         return -1
 
@@ -310,38 +309,22 @@ def getToken() -> None:
     coluna_inicio_token = coluna
     linha_inicio_token = linha
 
-    print_estado = False
     estado = estado_inicial()
     char = prox_char()
 
     while char != 'EOF' and estado != -1:
         coluna += 1
 
-        if print_estado:
-            print(f'O estado atual é: {estado}')
-            print(f'O caractere atual é: {char}')
-            print()
-
         estado = move(estado, char)
-        # print(f'Nome_id atual: {nome_id}')
-
-        if not final(estado):
-            nome_id += char
 
         if final(estado):
             break
 
         char = prox_char()
 
-    if print_estado:
-        print(f'O estado atual é: {estado}')
-        print(f'O caractere atual é: {char}')
-    # print()
-    # print()
-
     if final(estado):
-        print('Cadeia aceita')
         acoes(estado)
+
         print(f'id: {nome_id}, linha: {linha_inicio_token} e coluna: {coluna_inicio_token}')
     else:
         raise Exception(
@@ -350,11 +333,12 @@ def getToken() -> None:
 
 
 if __name__ == '__main__':
-    # abre_arquivo('testes/teste01.txt')
-    abre_arquivo('testes/teste02.txt')
+    abre_arquivo('testes/teste01.txt')
 
-    # for i in range(26):
-    getToken()
-    # print()
+    for i in range(77):
+        getToken()
+
+    # abre_arquivo('testes/teste02.txt')
+    # getToken()
 
     arquivo.close()
