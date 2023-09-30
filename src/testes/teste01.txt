@@ -6,6 +6,22 @@ begin
 
     a := 10;
 
+    if rafael > lenovo then
+        a := 50;
+    else
+        a := 100 * 32;
+
+    _esse_eh_valido32
+
+    while _esse_eh_valido != lenovo
+        b := a + 10.3;
+
+    repeat
+        rafael := a + 10.3E+34;
+    until rafael < 100;
+
+    -130
+
     >
     >=
     <

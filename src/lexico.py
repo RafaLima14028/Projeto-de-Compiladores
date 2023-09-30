@@ -90,8 +90,6 @@ def setId() -> (str, str, (int, int)):
 def setChar() -> (str, str, (int, int)):
     global nome_id, linha_inicio_token, coluna_inicio_token
 
-    # nome_id_split = nome_id.split("'")
-
     item = tabela.tabela_de_simbolos.get(nome_id)
 
     if item is None:
@@ -335,7 +333,7 @@ def getToken() -> None:
 if __name__ == '__main__':
     abre_arquivo('testes/teste01.txt')
 
-    for i in range(77):
+    for i in range(149):
         getToken()
 
     # abre_arquivo('testes/teste02.txt')
