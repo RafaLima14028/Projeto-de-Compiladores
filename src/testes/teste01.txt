@@ -42,4 +42,5 @@ begin
     4.5E+10
     '\t'
     '\n'
+    >=rafael
 end

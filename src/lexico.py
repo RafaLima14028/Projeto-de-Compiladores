@@ -1,3 +1,6 @@
+#  Foi implementado dirigido por tabela usando diagrama de transição unificado
+import re
+
 import tabela_de_simbolos as tabela
 
 arquivo = None
@@ -299,7 +302,7 @@ def estado_inicial() -> int:
     return 1
 
 
-def getToken() -> None:
+def getToken() -> str | None:
     global nome_id, linha, coluna, \
         linha_inicio_token, coluna_inicio_token
 
@@ -323,7 +326,11 @@ def getToken() -> None:
     if final(estado):
         acoes(estado)
 
-        print(f'id: {nome_id}, linha: {linha_inicio_token} e coluna: {coluna_inicio_token}')
+        if re.match(r'^[\s\t\n]*$', nome_id):
+            return None
+        else:
+            return nome_id
+        # print(f'id: {nome_id}, linha: {linha_inicio_token} e coluna: {coluna_inicio_token}')
     else:
         raise Exception(
             f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}'
@@ -333,8 +340,11 @@ def getToken() -> None:
 if __name__ == '__main__':
     abre_arquivo('testes/teste01.txt')
 
-    for i in range(149):
-        getToken()
+    for i in range(158):
+        r = getToken()
+
+        if r is not None:
+            print(r)
 
     # abre_arquivo('testes/teste02.txt')
     # getToken()
