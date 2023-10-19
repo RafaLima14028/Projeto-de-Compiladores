@@ -30,6 +30,11 @@ def abre_arquivo(caminho: str) -> None:
         raise
 
 
+def fecha_arquivo() -> None:
+    global arquivo
+    arquivo.close()
+
+
 def lookhead() -> None:
     global coluna
 
@@ -39,13 +44,47 @@ def lookhead() -> None:
     arquivo.seek(arquivo.tell() - 1, 0)
 
 
+def volta_token_anterior():
+    global arquivo, linha, coluna, nome_id
+
+    if arquivo is not None:
+        arquivo.seek(arquivo.tell() - len(nome_id), 0)
+        coluna -= len(nome_id)
+    else:
+        raise Exception(
+            f'Já está no final do arquivo'
+        )
+
+
 def setInt() -> (str, str, (int, int)):
     global nome_id, linha_inicio_token, coluna_inicio_token
+
+    nome_id_int = -1
+
+    try:
+        nome_id_int = int(nome_id)
+    except ValueError:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'Ocorreu um erro na transformação para inteiro do número: {nome_id}.'
+        )
+
+    if len(nome_id) > 10:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'O {nome_id} excedeu a quantidade de caracacteres permitidos para um inteiro, coloque até 10 '
+            f'digitos.'
+        )
+    elif nome_id_int < 0 or nome_id_int > 32767:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'O {nome_id} excedeu o valor permitido, deve ser entre 0 e 32767 para inteiros.'
+        )
 
     item = tabela.tabela_de_simbolos.get(nome_id)
 
     if item is None:
-        tabela.tabela_de_simbolos[nome_id] = ('numero', int(nome_id), 'int')
+        tabela.tabela_de_simbolos[nome_id] = ('numero', nome_id_int, 'int')
 
     return 'numero', nome_id, (linha_inicio_token, coluna_inicio_token)
 
@@ -53,10 +92,38 @@ def setInt() -> (str, str, (int, int)):
 def setFrac() -> (str, str, (int, int)):
     global nome_id, linha_inicio_token, coluna_inicio_token
 
+    nome_id_float = -1.0
+
+    try:
+        nome_id_float = float(nome_id)
+    except ValueError:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'Ocorreu um erro na transformação para número de ponto flutuante: {nome_id}.'
+        )
+
+    if len(nome_id.split('.')[0]) > 10:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'O {nome_id_float} excedeu a quantidade de caracacteres permitidos para a parte inteira de um número de '
+            f'ponto flutuante, coloque até 10 digitos na parte inteira.'
+        )
+    elif len(nome_id.split('.')[1]) > 9:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'O {nome_id_float} excedeu a quantidade de caracacteres permitidos para a parte flutuante, coloque até 9 '
+            f'digitos depois da vírgula.'
+        )
+    elif nome_id_float < 0.0 or nome_id_float > 3.4E38:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'O {nome_id_float} excedeu o valor permitido, deve ser entre 0 e 3.4E+38 para ponto flutuante.'
+        )
+
     item = tabela.tabela_de_simbolos.get(nome_id)
 
     if item is None:
-        tabela.tabela_de_simbolos[nome_id] = ('numero', float(nome_id), 'float')
+        tabela.tabela_de_simbolos[nome_id] = ('numero', nome_id_float, 'float')
 
     return 'numero', nome_id, (linha_inicio_token, coluna_inicio_token)
 
@@ -64,8 +131,50 @@ def setFrac() -> (str, str, (int, int)):
 def setExp() -> (str, str, (int, int)):
     global nome_id, linha_inicio_token, coluna_inicio_token
 
-    numero = nome_id.split('E')
-    numero = float(numero[0]) * pow(10, float(numero[1]))
+    numero = -1.0
+
+    try:
+        numero = nome_id.split('E')
+        print(numero[0], numero[1])
+        numero = float(numero[0]) * pow(10, float(numero[1]))
+    except ValueError:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'Ocorreu um erro na transformação para exponenciação: {nome_id}.'
+        )
+
+    try:
+        numero_antes_do_e = nome_id.split('E')[0]
+        numero_antes_do_e = numero_antes_do_e.split('.')
+
+        if len(numero_antes_do_e) == 2:  # Ex: 10.2E+3
+            if len(nome_id.split('E')[0]) > 10:  # Numero de casas inteiras
+                raise Exception(
+                    f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+                    f'O {numero} excedeu a quantidade de caracacteres permitidos para a parte inteira de um número de '
+                    f'ponto flutuante, coloque até 10 digitos na parte inteira.'
+                )
+            elif len(numero_antes_do_e[1]) > 9:  # Numero de casas decimais
+                raise Exception(
+                    f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+                    f'O {numero} excedeu a quantidade de caracacteres permitidos para a parte flutuante, coloque até 9 '
+                    f'digitos depois da vírgula.'
+                )
+        else:  # Ex: 10E+3
+            if len(nome_id.split('E')[0]) > 10:  # Numero de casas inteiras
+                raise Exception(
+                    f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+                    f'O {numero} excedeu a quantidade de caracacteres permitidos para a parte inteira de um número de '
+                    f'ponto flutuante, coloque até 10 digitos na parte inteira.'
+                )
+    except ValueError:
+        pass
+
+    if numero < 0.0 or numero > 3.4E38:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'O {numero} excedeu o valor permitido, deve ser entre 0 e 3.4E+38 para ponto flutuante.'
+        )
 
     item = tabela.tabela_de_simbolos.get(nome_id)
 
@@ -77,6 +186,12 @@ def setExp() -> (str, str, (int, int)):
 
 def setId() -> (str, str, (int, int)):
     global nome_id, linha_inicio_token, coluna_inicio_token
+
+    if len(nome_id) > 30:
+        raise Exception(
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'O nome da sua variável {nome_id} excedeu o limite de 30 caracteres.'
+        )
 
     item = tabela.tabela_de_simbolos.get(nome_id)
 
@@ -215,7 +330,7 @@ tabela_transicao = {
         '=': 36,
         'outros': 35
     },
-    35: ('pontucao', 'DP', True),
+    35: ('pontuacao', 'DP', True),
     36: ('atribuicao', '', False),
     37: ('pontuacao', 'PV', False),
     38: ('pontuacao', 'VR', False),
@@ -227,7 +342,7 @@ tabela_transicao = {
 }
 
 
-def acoes(estado: int) -> None:
+def acoes(estado: int) -> (str, str):
     retorno_estado_final = tabela_transicao[estado]
 
     if type(retorno_estado_final) is tuple:
@@ -235,18 +350,32 @@ def acoes(estado: int) -> None:
 
         if faz_lookhead:
             lookhead()
+
+        return tipo, valor
     else:
+        retorno1 = None
+        retorno2 = None
+
         for func in retorno_estado_final:
-            func()
+            resp = func()
+
+            if resp is not None:
+                #  Remove a linha e coluna
+                retorno1 = resp[0]
+                retorno2 = resp[1]
+
+        return retorno1, retorno2
 
 
 def prox_char() -> str:
     global arquivo
 
-    try:
-        return arquivo.read(1)
-    except StopIteration:
+    char = arquivo.read(1)
+
+    if char == '':
         return 'EOF'
+    else:
+        return char
 
 
 def final(estado: int) -> bool:
@@ -286,7 +415,7 @@ def move(estado: int, char: str) -> int:
             nome_id += char
 
             return tabela_transicao[estado][tipo_do_char]
-        elif 'outros' in tabela_transicao[estado]:
+        elif 'outros' in tabela_transicao[estado] or tipo_do_char == 'EOF':
             valor = tabela_transicao[estado]['outros']
 
             if final(valor) and char == '\n':
@@ -302,9 +431,8 @@ def estado_inicial() -> int:
     return 1
 
 
-def getToken() -> str | None:
-    global nome_id, linha, coluna, \
-        linha_inicio_token, coluna_inicio_token
+def getToken() -> ((str, str), (int, int), bool):
+    global nome_id, linha, coluna, linha_inicio_token, coluna_inicio_token
 
     nome_id = ''
     coluna_inicio_token = coluna
@@ -312,6 +440,8 @@ def getToken() -> str | None:
 
     estado = estado_inicial()
     char = prox_char()
+
+    eh_eof = False
 
     while char != 'EOF' and estado != -1:
         coluna += 1
@@ -323,28 +453,49 @@ def getToken() -> str | None:
 
         char = prox_char()
 
+    if char == 'EOF':
+        eh_eof = True
+
+        if not final(estado):
+            estado = move(estado, char)
+
     if final(estado):
-        acoes(estado)
+        tipo = acoes(estado)
 
         if re.match(r'^[\s\t\n]*$', nome_id):
-            return None
+            return getToken()
         else:
-            return nome_id
-        # print(f'id: {nome_id}, linha: {linha_inicio_token} e coluna: {coluna_inicio_token}')
+            return tipo, (linha_inicio_token, coluna_inicio_token), eh_eof
     else:
+        msg_add = ''
+
+        if not final(estado):
+            msg_add = 'Não é um token válido.'
+
         raise Exception(
-            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}'
+            f'Ocorreu um erro na análise léxica: Na linha: {linha_inicio_token} e na coluna: {coluna_inicio_token}. '
+            f'{msg_add}'
         )
 
 
 if __name__ == '__main__':
     abre_arquivo('testes/teste01.txt')
 
-    for i in range(158):
-        r = getToken()
+    eh_eof = False
 
-        if r is not None:
-            print(r)
+    while not eh_eof:
+        tipo, _, eh_eof = getToken()
+
+        if tipo == 'EOF':
+            print('Parou')
+            break
+
+        if tipo is not None:
+            print(tipo)
+            print(eh_eof)
+            print()
+
+        # time.sleep(.2)
 
     # abre_arquivo('testes/teste02.txt')
     # getToken()

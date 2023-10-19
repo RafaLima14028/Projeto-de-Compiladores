@@ -2,7 +2,7 @@ program teste()
 begin
     int: a;
     float: b;
-    char: rafael, lenovo;
+    char: rafael, marcos, monica, kato, luis;
 
     a := 10;
 
@@ -21,7 +21,7 @@ begin
     until rafael < 100;
 
     -130
-
+    -124.32
     >
     >=
     <
