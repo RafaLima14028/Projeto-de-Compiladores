@@ -14,7 +14,7 @@ begin
         a := 'A';
     until 10 < 2;
 
-    while (b < 10.2)
+    while b < (10.2 + 2)
         begin
             int: v, f;
 
