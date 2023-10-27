@@ -1,75 +1,68 @@
 #  Implementado por descida recursiva
-from lexico import getToken, abre_arquivo, fecha_arquivo
+from lexico import getToken, volta_token_anterior, abre_arquivo, fecha_arquivo
 
 FIRST_DAS_TRANSICOES = {
     'call': ['program'],
-    'bloco': ['abre_bloco'],
+    'bloco': ['begin'],
     'variaveis': ['int', 'float', 'char'],
     'variaveis_linha': ['int', 'float', 'char'],
     'variavel': ['int', 'float', 'char'],
     'lista_ids': ['id'],
     'lista_ids_linha': [','],
-    'comandos': ['id', 'if', 'while', 'repeat'],
-    'comandos_linha': ['id', 'if', 'while', 'repeat'],
-    'comando': ['id', 'if', 'while', 'repeat'],
-    'comando_bloco': ['id', 'if', 'while', 'repeat', '{'],
-    'comando_bloco_linha': ['else'],
-    'cond': ['id', 'numero', 'caractere', '(', 'unario'],
-    'expre': ['id', 'numero', 'caractere', '(', 'unario'],
-    'expre_linha': ['+', '-', 'op'],
-    'expre2': ['id', 'numero', 'caractere', '(', 'unario'],
-    'expre2_linha': ['*', '/', 'op'],
-    'expre3': ['+', '-', 'id', 'numero', 'caractere', '('],
-    'expre3_linha': ['exp', ],
-    'unario': ['soma_sub', 'id', 'numero', 'caractere', '('],
-    'op': ['oprel', 'atribuicao'],
-    'term': ['id', 'numero', 'caractere', '(']
+    'cmd': ['id', 'if', 'while', 'repeat']
 }
 
 
-def descompacta_tipo_token(prox_token: ((str, str), (int, int), bool)) -> (str, str, int, int):
+def descompacta_getToken(prox_token: ((str, str), (int, int))) -> (str, str, int, int):
     return prox_token[0][0], prox_token[0][1], prox_token[1][0], prox_token[1][1]
 
 
-def final_do_arquivo(prox_token: ((str, str), (int, int), bool)) -> bool:
-    if prox_token[2]:
-        return True
-    else:
-        return False
+def gera_erro_sintatico(msg: str, linha: int, coluna: int,
+                        funcao_origem_do_erro: str = None, ultima_coisa_lida: str = None) -> None:
+    msg_extra = ''
+
+    if funcao_origem_do_erro is not None:
+        msg_extra = f'\nA função que originou o erro foi a: {funcao_origem_do_erro}. '
+
+        if ultima_coisa_lida is not None:
+            msg_extra += f'A última coisa lida antes de parar foi: {ultima_coisa_lida}'
+
+    raise Exception(
+        f'Ocorreu um erro na análise sintática: {msg} em {linha}:{coluna}. {msg_extra}'
+    )
 
 
-def gera_erro_sintatico(msg: str, linha: int, coluna: int) -> Exception:
-    raise Exception(f'Ocorreu um erro na análise sintática: {msg} em {linha}:{coluna}')
-
-
-def procedimento_lista_ids_linha() -> (str, str, int, int):
+def procedimento_lista_ids_linha():
     print()
     print('Procedimento das lista ids linha')
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
-    if tipo == 'pontuacao':
-        if valor == 'VR':
-            tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    if tipo == 'pontuacao' and valor == 'VR':
+        tipo = ','
 
-            if tipo == 'id':
-                print(tipo, valor)
-                return procedimento_lista_ids_linha()
-            else:
-                gera_erro_sintatico('Era esperado um nome para a variável depois da ,', linha, coluna)
-        else:
-            return tipo, valor, linha, coluna
+        while tipo in FIRST_DAS_TRANSICOES['lista_ids_linha']:
+            if tipo == ',':
+                print(tipo)
+                tipo, valor, linha, coluna = descompacta_getToken(getToken())
+                if tipo == 'id':
+                    print(tipo, valor)
+                    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+                else:
+                    gera_erro_sintatico('Era esperado um nome para a variável depois da ,', linha, coluna)
+
+        volta_token_anterior()
     else:
-        return tipo, valor, linha, coluna
+        volta_token_anterior()
 
 
-def procedimento_lista_ids() -> (str, str, int, int):
+def procedimento_lista_ids():
     print()
     print('Procedimento das lista ids')
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
     if tipo == 'id':
         print(tipo, valor)
-        return procedimento_lista_ids_linha()
+        procedimento_lista_ids_linha()
     else:
         gera_erro_sintatico('Era esperado um nome para a variável', linha, coluna)
 
@@ -77,22 +70,23 @@ def procedimento_lista_ids() -> (str, str, int, int):
 def procedimento_variavel():
     print()
     print('Procedimento das variavel')
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
     if tipo == 'pontuacao' and valor == 'DP':
         print(':')
 
-        tipo, valor, linha, coluna = procedimento_lista_ids()
+        procedimento_lista_ids()
+
+        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
         print('Procedimento das variavel')
-
-        if tipo is None:
-            tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-
-        print(tipo)
+        print(tipo, valor)
         if tipo == 'pontuacao' and valor == 'PV':
             print(';')
         else:
-            gera_erro_sintatico('Era esperado o símbolo ;', linha, coluna)
+            gera_erro_sintatico('Era esperado o símbolo ;', linha, coluna,
+                                'procedimento_variavel()',
+                                f'{tipo} e {valor}')
     else:
         gera_erro_sintatico('Era esperado o símbolo :', linha, coluna)
 
@@ -102,7 +96,7 @@ def procedimento_variaveis_linha():
     print('-' * 3)
     print('Procedimento das variaveis linha')
 
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
     if tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
         while tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
@@ -110,20 +104,24 @@ def procedimento_variaveis_linha():
 
             procedimento_variavel()
 
-            tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+            tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
-    return tipo, valor, linha, coluna
+        volta_token_anterior()
+    else:
+        volta_token_anterior()
 
 
 def procedimento_variaveis():
     print()
     print('Procedimento das variaveis')
-
-    return procedimento_variaveis_linha()
+    procedimento_variaveis_linha()
 
 
 def procedimento_term():
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    print()
+    print('Procedimento term')
+
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
     if tipo == 'id':
         print(tipo, valor)
@@ -133,213 +131,219 @@ def procedimento_term():
         print(tipo, valor)
     elif tipo == 'abre_parenteses':
         procedimento_expre()
-        tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
         if tipo == 'fecha_parenteses':
-            print(tipo)
+            print(')')
+        else:
+            gera_erro_sintatico('Era esperado um )', linha, coluna)
     else:
-        gera_erro_sintatico('Era esperado um id, numero, caractere ou (', linha, coluna)
-
-
-def procedimento_unario(tipo, valor, linha, coluna):
-    print()
-    print('-' * 3)
-    print('Procedimento dos unarios')
-
-    if tipo is None:
-        tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-
-    if tipo == 'soma_sub':
-        print(tipo, valor)
-        procedimento_term()
-    elif tipo in FIRST_DAS_TRANSICOES['unario']:
-        print(tipo, valor)
-    else:
-        gera_erro_sintatico('Era esperado +, -, varivel, numero, caractere ou (', linha, coluna)
-
-
-def procedimento_expre3_linha():
-    print()
-    print('Procedimento do expre3 linha')
-
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-
-    if tipo == 'exp':
-        print('^')
-        procedimento_unario(None, None, None, None)
-        return procedimento_expre3_linha()
-    else:
-        return tipo, valor, linha, coluna
-
-
-def procedimento_expre3():
-    print()
-    print('Procedimento do expre3')
-
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-
-    print(tipo, valor)
-
-    if tipo in FIRST_DAS_TRANSICOES['unario']:
-        procedimento_unario(tipo, valor, linha, coluna)
-        procedimento_expre3_linha()
-    else:
-        gera_erro_sintatico('Era esperado +, -, variavel, numero, caractere, (, operador relacional ou atribuicao',
-                            linha, coluna)
-
-
-def procedimento_expre2_linha():
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-
-    if tipo == 'mult_div':
-        procedimento_expre3()
-        procedimento_expre2_linha()
-
-
-def procedimento_expre2():
-    procedimento_expre3()
-    procedimento_expre2_linha()
-
-
-def procedimento_expre_linha():
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-
-    if tipo == 'soma_sub':
-        procedimento_expre2()
-        procedimento_expre_linha()
+        gera_erro_sintatico('Era esperado um termo válido como: id, numero, caractere ou (', linha, coluna)
 
 
 def procedimento_expre():
-    procedimento_expre2()
-    procedimento_expre_linha()
+    ...
 
 
 def procedimento_cond():
+    ...
+
+
+def procedimento_else_cmd():
     print()
-    print('-' * 4)
-    print('Procedimento do cond')
-    procedimento_expre()
+    print('Prodimento else_cmd')
 
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
-    if tipo == 'oprel':
-        procedimento_expre()
+    if tipo == 'else':
+        print(tipo)
+        procedimento_cmd_bloco()
     else:
-        gera_erro_sintatico('Era esperado um operador relacional', linha, coluna)
+        volta_token_anterior()
 
 
-def procedimento_comandos_linha(tipo, valor, linha, coluna):
+def procedimento_cmd_rep():
     print()
-    print('Procedimento do comando linha')
+    print('Procedimento cmd_rep')
 
-    if tipo in FIRST_DAS_TRANSICOES['comandos_linha']:
-        while tipo in FIRST_DAS_TRANSICOES['comandos_linha']:
-            if tipo == 'id':
-                print(tipo, valor)
-                tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
-                if tipo == 'atribuicao':
-                    print(':=')
+    if tipo == 'while':
+        print(tipo)
+        procedimento_cond()
+        procedimento_cmd_bloco()
+    elif tipo == 'repeat':
+        print(tipo)
+        procedimento_cmd_bloco()
 
-                    procedimento_expre()
-            elif tipo == 'if':
-                print('if')
-                procedimento_cond()
+        tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
-                tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-                if tipo == 'then':
-                    ...
-                else:
-                    raise Exception(
-                        f'Ocorreu um erro na análise sintática: Era esperado um then para concluir o if '
-                        f'em {linha}:{coluna}')
-            elif tipo == 'while':
-                ...
-            elif tipo == 'repeat':
-                ...
+        if tipo == 'until':
+            print(tipo)
+
+            procedimento_cond()
+
+            tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+            if tipo == 'pontuacao' and valor == 'PV':
+                print(';')
             else:
-                raise Exception(
-                    f'Ocorreu um erro na análise sintática: Era esperado uma atribuição (:=) depois da variavel '
-                    f'em {linha}:{coluna}')
-
-            tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+                gera_erro_sintatico('Era esperado um ponto e vírgula (;)', linha, coluna)
+        else:
+            gera_erro_sintatico('Era esperado um until', linha, coluna)
     else:
-        raise Exception(
-            f'Ocorreu um erro na análise sintática: Era esperado uma variável, if, while ou repeat '
-            f'em {linha}:{coluna}')
+        gera_erro_sintatico('Era esperado um while ou repeat', linha, coluna)
 
 
-def procedimento_comandos(tipo, valor, linha, coluna):
+def procedimento_cmd_bloco():
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    if tipo == 'begin':
+        volta_token_anterior()
+        procedimento_bloco()
+    elif tipo in FIRST_DAS_TRANSICOES['cmd']:
+        volta_token_anterior()
+        procedimento_cmd()
+    else:
+        gera_erro_sintatico(
+            'Era esperado um comando válido', linha, coluna,
+            'procedimento_cmd_bloco()', f'{tipo} e {valor}'
+        )
+
+
+def procedimento_cmd_cond():
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    if tipo == 'if':
+        print(tipo)
+        procedimento_cond()
+        procedimento_cmd_bloco()
+        procedimento_else_cmd()
+    else:
+        gera_erro_sintatico('Era esperado um if', linha, coluna)
+
+
+def procedimento_cmd_atrib():
     print()
-    print('-' * 3)
-    print('Procedimento do comando')
-    procedimento_comandos_linha(tipo, valor, linha, coluna)
+    print('Procedimento cmd_atrib')
+
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    if tipo == 'id':
+        print(tipo, valor)
+        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+        if tipo == 'atribuicao':
+            print(':=')
+            procedimento_expre()
+
+            tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+            if tipo == 'pontuacao' and valor == 'PV':
+                print(';')
+            else:
+                gera_erro_sintatico('Era esperado ponto e vírugula (;)', linha, coluna)
+        else:
+            gera_erro_sintatico('Era esprado um atribuição (:=)', linha, coluna)
+    else:
+        gera_erro_sintatico('Era esperado um variável', linha, coluna)
+
+
+def procedimento_cmd():
+    print()
+    print('Procedimento cmd')
+
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    while tipo in FIRST_DAS_TRANSICOES['cmd']:
+        if tipo == 'id':
+            volta_token_anterior()
+            procedimento_cmd_atrib()
+        elif tipo == 'if':
+            volta_token_anterior()
+            procedimento_cmd_cond()
+        elif tipo == 'while' or tipo == 'repeat':
+            volta_token_anterior()
+            procedimento_cmd_rep()
+
+        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    volta_token_anterior()
+
+
+def procedimento_cmds():
+    print()
+    print('Procedimento cmds')
+
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    if tipo in FIRST_DAS_TRANSICOES['cmd']:
+        volta_token_anterior()
+        procedimento_cmd()
+    else:
+        gera_erro_sintatico('Era esperado um comando válido', linha, coluna)
 
 
 def procedimento_bloco():
     print()
     print('Procedimento do bloco')
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    print(f'Imprimi algo 1: {tipo, valor}')
 
     if tipo == 'begin':
         print(tipo)
-        resultado_variaveis = procedimento_variaveis()
+        print('#' * 30)
+        procedimento_variaveis()
 
-        if resultado_variaveis is None:
-            tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-            procedimento_comandos(tipo, valor, linha, coluna)
+        print('#' * 30)
+        procedimento_cmds()
+
+        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        print(f'Imprimi algo 2: {tipo, valor}')
+        if tipo == 'end':
+            print('end')
+            print('CHEGOU NO FINAL DO PROGRAMA')
         else:
-            tipo, valor, linha, coluna = resultado_variaveis
-            procedimento_comandos(tipo, valor, linha, coluna)
-
-        # tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
-        # if tipo == 'end':
-        #     return
-        # else:
-        #     raise Exception(
-        #         f'Ocorreu um erro na análise sintática: Era esperado fechamento de bloco (end) em '
-        #         f'{linha}:{coluna}')
+            gera_erro_sintatico(
+                'Era esperado fechamento de bloco (end)', linha, coluna,
+                'procedimento_bloco()', f'{tipo} e {valor}'
+            )
     else:
-        raise Exception(
-            f'Ocorreu um erro na análise sintática: Era esperado abertura de bloco (begin) em '
-            f'{linha}:{coluna}')
+        gera_erro_sintatico('Era esperado abertura de bloco (begin)', linha, coluna)
 
 
 def procedimento_call() -> None:
     print()
     print('Procedimento do call')
-    tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+    tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
     if tipo == 'program':
         print(tipo)
-        tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+        tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
         if tipo == 'id':
             print(tipo)
-            tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+            tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
             if tipo == 'abre_parenteses':
                 print(tipo)
-                tipo, valor, linha, coluna = descompacta_tipo_token(getToken())
+                tipo, valor, linha, coluna = descompacta_getToken(getToken())
 
                 if tipo == 'fecha_parenteses':
                     print(tipo)
                     procedimento_bloco()
                 else:
-                    raise Exception(f'Ocorreu um erro na análise sintática: Era esperado fechamento de parenteses em '
-                                    f'{linha}:{coluna}')
+                    gera_erro_sintatico('Era esperado fechamento de parenteses', linha, coluna)
             else:
-                raise Exception(f'Ocorreu um erro na análise sintática: Era esperado abertura de parenteses em '
-                                f'{linha}:{coluna}')
+                gera_erro_sintatico('Era esperado abertura de parenteses', linha, coluna)
         else:
-            raise Exception(f'Ocorreu um erro na análise sintática: Era esperado um nome para o program em '
-                            f'{linha}:{coluna}')
+            gera_erro_sintatico('Era esperado um nome para o program', linha, coluna)
     else:
-        raise Exception(f'Ocorreu um erro na análise sintática: Era esperado a palavra reservada program em '
-                        f'{linha}:{coluna}')
+        gera_erro_sintatico('Era esperado a palavra reservada program', linha, coluna)
 
 
 if __name__ == '__main__':
-    abre_arquivo('testes/teste02.txt')
+    abre_arquivo('testes/teste03.txt')
 
     procedimento_call()
 

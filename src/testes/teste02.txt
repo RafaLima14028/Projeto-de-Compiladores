@@ -1,0 +1,26 @@
+program teste_do_rafael()
+begin
+    int: a, rafael;
+    float: b, f;
+
+    if a > 2 then
+        rafael := 1;
+    else
+        rafael := 2;
+
+    { Esse é um comentario de teste > < = + - ^ 'A' }
+
+    repeat
+        a := 'A';
+    until 10 < 2;
+
+    while (b < 10.2)
+        begin
+            int: v, f;
+
+            if v = 21 then
+                f := -2;
+            else
+                f := 2;
+        end
+end

@@ -1,0 +1,6 @@
+program teste_do_rafael()
+begin
+    int: a, rafael;
+    float: b, f;
+    char: beto;
+end
