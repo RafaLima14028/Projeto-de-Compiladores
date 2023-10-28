@@ -14,6 +14,9 @@ begin
         a := 'A';
     until 10 < 2;
 
+    b := (2^3);
+    b := 2^-3;
+
     while b < (10.2 + 2)
         begin
             int: v, f;

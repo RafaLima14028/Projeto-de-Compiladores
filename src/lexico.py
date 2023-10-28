@@ -47,7 +47,7 @@ def lookhead() -> None:
     arquivo.seek(arquivo.tell() - 1, 0)
 
 
-def volta_token_anterior():
+def volta_token_anterior() -> None:
     global travar
 
     if travar is False:
@@ -219,11 +219,7 @@ def setChar() -> (str, str, (int, int)):
     return 'caractere', nome_id, (linha_inicio_token, coluna_inicio_token)
 
 
-estados_finais = [
-    2, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15,
-    17, 20, 22, 24, 27, 31, 32, 33, 35, 36,
-    37, 38, 40
-]
+estados_finais = [2, 4, 5, 7, 8, 10, 11, 12, 13, 14, 15, 17, 20, 22, 24, 27, 31, 32, 33, 35, 36, 37, 38, 40]
 
 tabela_transicao = {
     1: {
@@ -327,8 +323,8 @@ tabela_transicao = {
         'outros': 31
     },
     31: [setExp, lookhead],
-    32: ('fecha_parenteses', '', False),
-    33: ('abre_parenteses', '', False),
+    32: (')', '', False),
+    33: ('(', '', False),
     34: {
         '=': 36,
         'outros': 35
@@ -434,12 +430,12 @@ def estado_inicial() -> int:
     return 1
 
 
-def getToken() -> ((str, str), (int, int), bool):
+def getToken() -> (str, str, int, int):
     global linha_inicio_token, coluna_inicio_token, travar, tipo
 
     if travar is True:
         travar = False
-        return tipo, (linha_inicio_token, coluna_inicio_token)
+        return tipo[0], tipo[1], linha_inicio_token, coluna_inicio_token
 
     global nome_id, linha, coluna
 
@@ -470,7 +466,7 @@ def getToken() -> ((str, str), (int, int), bool):
         if re.match(r'^[\s\t\n]*$', nome_id) or (tipo[0] == '' and tipo[1] == ''):
             return getToken()
         else:
-            return tipo, (linha_inicio_token, coluna_inicio_token)
+            return tipo[0], tipo[1], linha_inicio_token, coluna_inicio_token
     else:
         msg_add = ''
 
@@ -484,7 +480,7 @@ if __name__ == '__main__':
     abre_arquivo('testes/teste01.txt')
 
     for _ in range(100):
-        tipo, _ = getToken()
-        print(tipo)
+        tipo0, tipo1, linha, coluna = getToken()
+        print(tipo0)
 
-    arquivo.close()
+    fecha_arquivo()

@@ -9,12 +9,24 @@ FIRST_DAS_TRANSICOES = {
     'variavel': ['int', 'float', 'char'],
     'lista_ids': ['id'],
     'lista_ids_linha': [','],
-    'cmd': ['id', 'if', 'while', 'repeat']
+    'cmds': ['id', 'if', 'while', 'repeat'],
+    'cmds_linha': ['id', 'if', 'while', 'repeat'],
+    'cmd': ['id', 'if', 'while', 'repeat'],
+    'cmd_atrib': ['id'],
+    'cmd_cond': ['if'],
+    'cmd_rep': ['while', 'repeat'],
+    'cmd_bloco': ['begin', 'id', 'if', 'while', 'repeat'],
+    'cmd_else': ['else'],
+    'cond': ['id', 'numero', 'caractere', '('],
+    'expre': ['id', 'numero', 'caractere', '('],
+    'expre_linha': ['soma_sub'],
+    'expre2': ['id', 'numero', 'caractere', '('],
+    'expre2_linha': ['mult_div'],
+    'expre3': ['soma_sub', 'id', 'numero', 'caractere', '('],
+    'expre3_linha': ['exp'],
+    'unario': ['soma_sub', 'id', 'numero', 'caractere', '('],
+    'term': ['id', 'numero', 'caractere', '(']
 }
-
-
-def descompacta_getToken(prox_token: ((str, str), (int, int))) -> (str, str, int, int):
-    return prox_token[0][0], prox_token[0][1], prox_token[1][0], prox_token[1][1]
 
 
 def gera_erro_sintatico(msg: str, linha: int, coluna: int,
@@ -23,19 +35,18 @@ def gera_erro_sintatico(msg: str, linha: int, coluna: int,
 
     if funcao_origem_do_erro is not None:
         msg_extra = f'\nA função que originou o erro foi a: {funcao_origem_do_erro}. '
-
-        if ultima_coisa_lida is not None:
-            msg_extra += f'A última coisa lida antes de parar foi: {ultima_coisa_lida}'
+    if ultima_coisa_lida is not None:
+        msg_extra += f'A última coisa lida antes de parar foi: {ultima_coisa_lida}'
 
     raise Exception(
         f'Ocorreu um erro na análise sintática: {msg} em {linha}:{coluna}. {msg_extra}'
     )
 
 
-def procedimento_lista_ids_linha():
+def procedimento_lista_ids_linha() -> None:
     print()
     print('Procedimento das lista ids linha')
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'pontuacao' and valor == 'VR':
         tipo = ','
@@ -43,10 +54,11 @@ def procedimento_lista_ids_linha():
         while tipo in FIRST_DAS_TRANSICOES['lista_ids_linha']:
             if tipo == ',':
                 print(tipo)
-                tipo, valor, linha, coluna = descompacta_getToken(getToken())
+                tipo, valor, linha, coluna = getToken()
+
                 if tipo == 'id':
                     print(tipo, valor)
-                    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+                    tipo, valor, linha, coluna = getToken()
                 else:
                     gera_erro_sintatico('Era esperado um nome para a variável depois da ,', linha, coluna)
 
@@ -55,10 +67,10 @@ def procedimento_lista_ids_linha():
         volta_token_anterior()
 
 
-def procedimento_lista_ids():
+def procedimento_lista_ids() -> None:
     print()
     print('Procedimento das lista ids')
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'id':
         print(tipo, valor)
@@ -67,17 +79,17 @@ def procedimento_lista_ids():
         gera_erro_sintatico('Era esperado um nome para a variável', linha, coluna)
 
 
-def procedimento_variavel():
+def procedimento_variavel() -> None:
     print()
     print('Procedimento das variavel')
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'pontuacao' and valor == 'DP':
         print(':')
 
         procedimento_lista_ids()
 
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
 
         print('Procedimento das variavel')
         print(tipo, valor)
@@ -91,12 +103,12 @@ def procedimento_variavel():
         gera_erro_sintatico('Era esperado o símbolo :', linha, coluna)
 
 
-def procedimento_variaveis_linha():
+def procedimento_variaveis_linha() -> None:
     print()
     print('-' * 3)
     print('Procedimento das variaveis linha')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
         while tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
@@ -104,24 +116,24 @@ def procedimento_variaveis_linha():
 
             procedimento_variavel()
 
-            tipo, valor, linha, coluna = descompacta_getToken(getToken())
+            tipo, valor, linha, coluna = getToken()
 
         volta_token_anterior()
     else:
         volta_token_anterior()
 
 
-def procedimento_variaveis():
+def procedimento_variaveis() -> None:
     print()
     print('Procedimento das variaveis')
     procedimento_variaveis_linha()
 
 
-def procedimento_term():
+def procedimento_term() -> None:
     print()
     print('Procedimento term')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     print(f'NO TERM(DEBUG): {tipo} e {valor}')
 
@@ -131,27 +143,30 @@ def procedimento_term():
         print(tipo, valor)
     elif tipo == 'caractere':
         print(tipo, valor)
-    elif tipo == 'abre_parenteses':
+    elif tipo == '(':
         procedimento_expre()
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
 
-        if tipo == 'fecha_parenteses':
+        if tipo == ')':
             print(')')
         else:
             gera_erro_sintatico('Era esperado um )', linha, coluna,
-                                'procedimento_term()', f'{tipo} e {valor}')
+                                'procedimento_term()',
+                                f'{tipo} e {valor}')
     else:
         gera_erro_sintatico(
             'Era esperado um termo válido como: id, numero, caractere ou (', linha, coluna,
-            'procedimento_term()', f'{tipo} e {valor}'
-        )
+            'procedimento_term()',
+            f'{tipo} e {valor}')
 
 
-def procedimento_unario():
+def procedimento_unario() -> None:
     print()
     print('Procedimento unario')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
+    print(f'PROCEDIMENTO UNARIO (DEBUG): {tipo} e {valor}')
+
     if tipo == 'soma_sub':
         print(tipo, valor)
         procedimento_term()
@@ -160,87 +175,96 @@ def procedimento_unario():
         procedimento_term()
 
 
-def procedimento_expre3_linha():
+def procedimento_expre3_linha() -> None:
     print()
     print('Procedimento expre3_linha')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
-    if tipo == 'exp':
+    tipo, valor, linha, coluna = getToken()
+
+    while tipo in FIRST_DAS_TRANSICOES['expre3_linha']:
         print(tipo)
-        # procedimento_term()
         procedimento_unario()
-        procedimento_expre3_linha()
-    else:
-        volta_token_anterior()
+
+        tipo, valor, linha, coluna = getToken()
+        print(f'DENTRO DO EXPRE3_LINHA(DEBUG): {tipo} e {valor}')
+
+    volta_token_anterior()
 
 
-def procedimento_expre3():
+def procedimento_expre3() -> None:
     print()
     print('Procedimento expre3')
 
-    # procedimento_term()
     procedimento_unario()
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    tipo, valor, linha, coluna = getToken()
     print(f'ANTES DO TERM(DEBUG): {tipo} e {valor}')
     volta_token_anterior()
+
     procedimento_expre3_linha()
 
 
-def procedimento_expre2_linha():
+def procedimento_expre2_linha() -> None:
     print()
     print('Procedimento expre2_linha')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
-    if tipo == 'mult_div':
-        print(tipo, valor)
+    tipo, valor, linha, coluna = getToken()
+
+    while tipo in FIRST_DAS_TRANSICOES['expre2_linha']:
+        print(tipo)
         procedimento_expre3()
-        procedimento_expre2_linha()
-    else:
-        volta_token_anterior()
+
+        tipo, valor, linha, coluna = getToken()
+
+    volta_token_anterior()
 
 
-def procedimento_expre2():
+def procedimento_expre2() -> None:
     print()
     print('Procedimento expre2')
 
     procedimento_expre3()
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+
+    tipo, valor, linha, coluna = getToken()
     print(f'ANTES DO EXPRE3(DEBUG): {tipo} e {valor}')
     volta_token_anterior()
+
     procedimento_expre2_linha()
 
 
-def procedimento_expre_linha():
+def procedimento_expre_linha() -> None:
     print()
     print('Procedimento expre_linha')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
-    if tipo == 'soma_sub':
-        print(tipo, valor)
+    tipo, valor, linha, coluna = getToken()
+
+    while tipo in FIRST_DAS_TRANSICOES['expre_linha']:
+        print(tipo)
         procedimento_expre2()
-        procedimento_expre_linha()
-    else:
-        volta_token_anterior()
+
+        tipo, valor, linha, coluna = getToken()
+
+    volta_token_anterior()
 
 
-def procedimento_expre():
+def procedimento_expre() -> None:
     print()
     print('Procedimento expre')
 
     procedimento_expre2()
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
     print(f'ANTES DO EXPRE2(DEBUG): {tipo} e {valor}')
     volta_token_anterior()
     procedimento_expre_linha()
 
 
-def procedimento_cond():
+def procedimento_cond() -> None:
     print()
     print('Procedimento cond')
 
     procedimento_expre()
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
     if tipo == 'oprel':
         print(tipo, valor)
 
@@ -249,11 +273,11 @@ def procedimento_cond():
         gera_erro_sintatico('Era esperado um operador relacional', linha, coluna)
 
 
-def procedimento_else_cmd():
+def procedimento_else_cmd() -> None:
     print()
     print('Prodimento else_cmd')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'else':
         print(tipo)
@@ -262,11 +286,11 @@ def procedimento_else_cmd():
         volta_token_anterior()
 
 
-def procedimento_cmd_rep():
+def procedimento_cmd_rep() -> None:
     print()
     print('Procedimento cmd_rep')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'while':
         print(tipo)
@@ -276,14 +300,14 @@ def procedimento_cmd_rep():
         print(tipo)
         procedimento_cmd_bloco()
 
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
 
         if tipo == 'until':
             print(tipo)
 
             procedimento_cond()
 
-            tipo, valor, linha, coluna = descompacta_getToken(getToken())
+            tipo, valor, linha, coluna = getToken()
 
             if tipo == 'pontuacao' and valor == 'PV':
                 print(';')
@@ -295,8 +319,8 @@ def procedimento_cmd_rep():
         gera_erro_sintatico('Era esperado um while ou repeat', linha, coluna)
 
 
-def procedimento_cmd_bloco():
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+def procedimento_cmd_bloco() -> None:
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'begin':
         volta_token_anterior()
@@ -311,17 +335,17 @@ def procedimento_cmd_bloco():
         )
 
 
-def procedimento_cmd_cond():
+def procedimento_cmd_cond() -> None:
     print()
     print('Procedimento cmd_cond')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'if':
         print(tipo)
         procedimento_cond()
 
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
 
         if tipo == 'then':
             print(tipo)
@@ -333,22 +357,22 @@ def procedimento_cmd_cond():
         gera_erro_sintatico('Era esperado um if', linha, coluna)
 
 
-def procedimento_cmd_atrib():
+def procedimento_cmd_atrib() -> None:
     print()
     print('Procedimento cmd_atrib')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'id':
         print(tipo, valor)
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
 
         if tipo == 'atribuicao':
             print(':=')
 
             procedimento_expre()  # Está retornando 2
 
-            tipo, valor, linha, coluna = descompacta_getToken(getToken())
+            tipo, valor, linha, coluna = getToken()
 
             if tipo == 'pontuacao' and valor == 'PV':
                 print(';')
@@ -362,11 +386,11 @@ def procedimento_cmd_atrib():
         gera_erro_sintatico('Era esperado um variável', linha, coluna)
 
 
-def procedimento_cmd():
+def procedimento_cmd() -> None:
     print()
     print('Procedimento cmd')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     while tipo in FIRST_DAS_TRANSICOES['cmd']:
         if tipo == 'id':
@@ -379,16 +403,16 @@ def procedimento_cmd():
             volta_token_anterior()
             procedimento_cmd_rep()
 
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
 
     volta_token_anterior()
 
 
-def procedimento_cmds():
+def procedimento_cmds() -> None:
     print()
     print('Procedimento cmds')
 
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo in FIRST_DAS_TRANSICOES['cmd']:
         volta_token_anterior()
@@ -397,10 +421,10 @@ def procedimento_cmds():
         gera_erro_sintatico('Era esperado um comando válido', linha, coluna)
 
 
-def procedimento_bloco():
+def procedimento_bloco() -> None:
     print()
     print('Procedimento do bloco')
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
     print(f'Imprimi algo 1: {tipo, valor}')
 
     if tipo == 'begin':
@@ -411,7 +435,7 @@ def procedimento_bloco():
         print('#' * 30)
         procedimento_cmds()
 
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
         print(f'Imprimi algo 2: {tipo, valor}')
         if tipo == 'end':
             print('end')
@@ -428,21 +452,21 @@ def procedimento_bloco():
 def procedimento_call() -> None:
     print()
     print('Procedimento do call')
-    tipo, valor, linha, coluna = descompacta_getToken(getToken())
+    tipo, valor, linha, coluna = getToken()
 
     if tipo == 'program':
         print(tipo)
-        tipo, valor, linha, coluna = descompacta_getToken(getToken())
+        tipo, valor, linha, coluna = getToken()
 
         if tipo == 'id':
             print(tipo)
-            tipo, valor, linha, coluna = descompacta_getToken(getToken())
+            tipo, valor, linha, coluna = getToken()
 
-            if tipo == 'abre_parenteses':
+            if tipo == '(':
                 print(tipo)
-                tipo, valor, linha, coluna = descompacta_getToken(getToken())
+                tipo, valor, linha, coluna = getToken()
 
-                if tipo == 'fecha_parenteses':
+                if tipo == ')':
                     print(tipo)
                     procedimento_bloco()
                 else:
