@@ -1,5 +1,11 @@
 #  Implementado por descida recursiva
+from time import time
+import os
+from anytree import Node, RenderTree
+
 from lexico import getToken, volta_token_anterior, abre_arquivo, fecha_arquivo
+
+ARVORE = None
 
 FIRST_DAS_TRANSICOES = {
     'call': ['program'],
@@ -43,9 +49,9 @@ def gera_erro_sintatico(msg: str, linha: int, coluna: int,
     )
 
 
-def procedimento_lista_ids_linha() -> None:
-    print()
-    print('Procedimento das lista ids linha')
+def procedimento_lista_ids_linha(raiz: Node) -> None:
+    no_pai = Node("lista_ids'", raiz)
+
     tipo, valor, linha, coluna = getToken()
 
     if tipo == 'pontuacao' and valor == 'VR':
@@ -53,12 +59,16 @@ def procedimento_lista_ids_linha() -> None:
 
         while tipo in FIRST_DAS_TRANSICOES['lista_ids_linha']:
             if tipo == ',':
-                print(tipo)
+                Node(',', no_pai)
+
                 tipo, valor, linha, coluna = getToken()
 
                 if tipo == 'id':
-                    print(tipo, valor)
+                    Node(tipo, no_pai)
                     tipo, valor, linha, coluna = getToken()
+
+                    if tipo == 'pontuacao' and valor == 'VR':
+                        tipo = ','
                 else:
                     gera_erro_sintatico('Era esperado um nome para a variável depois da ,', linha, coluna)
 
@@ -67,54 +77,55 @@ def procedimento_lista_ids_linha() -> None:
         volta_token_anterior()
 
 
-def procedimento_lista_ids() -> None:
-    print()
-    print('Procedimento das lista ids')
+def procedimento_lista_ids(raiz: Node) -> None:
+    no_pai = Node('lista_ids', raiz)
+
     tipo, valor, linha, coluna = getToken()
 
     if tipo == 'id':
-        print(tipo, valor)
-        procedimento_lista_ids_linha()
+        Node(tipo, parent=no_pai)
+        procedimento_lista_ids_linha(no_pai)
     else:
         gera_erro_sintatico('Era esperado um nome para a variável', linha, coluna)
 
 
-def procedimento_variavel() -> None:
-    print()
-    print('Procedimento das variavel')
+def procedimento_variavel(raiz: Node) -> None:
+    no_pai = Node('variavel', raiz)
+
     tipo, valor, linha, coluna = getToken()
 
-    if tipo == 'pontuacao' and valor == 'DP':
-        print(':')
-
-        procedimento_lista_ids()
+    if tipo == 'int' or tipo == 'float' or tipo == 'char':
+        Node(tipo, no_pai)
 
         tipo, valor, linha, coluna = getToken()
 
-        print('Procedimento das variavel')
-        print(tipo, valor)
-        if tipo == 'pontuacao' and valor == 'PV':
-            print(';')
+        if tipo == 'pontuacao' and valor == 'DP':
+            Node(':', parent=no_pai)
+
+            procedimento_lista_ids(no_pai)
+
+            tipo, valor, linha, coluna = getToken()
+
+            if tipo == 'pontuacao' and valor == 'PV':
+                Node(';', parent=no_pai)
+            else:
+                gera_erro_sintatico('Era esperado o símbolo ;', linha, coluna,
+                                    'procedimento_variavel()',
+                                    f'{tipo} e {valor}')
         else:
-            gera_erro_sintatico('Era esperado o símbolo ;', linha, coluna,
-                                'procedimento_variavel()',
-                                f'{tipo} e {valor}')
+            gera_erro_sintatico('Era esperado o símbolo :', linha, coluna)
     else:
-        gera_erro_sintatico('Era esperado o símbolo :', linha, coluna)
+        gera_erro_sintatico('Era esperado o tipo da variável', linha, coluna)
 
 
-def procedimento_variaveis_linha() -> None:
-    print()
-    print('-' * 3)
-    print('Procedimento das variaveis linha')
-
+def procedimento_variaveis_linha(raiz: Node) -> None:
     tipo, valor, linha, coluna = getToken()
 
     if tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
         while tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
-            print(tipo)
-
-            procedimento_variavel()
+            no_pai = Node("variaveis'", raiz)
+            volta_token_anterior()
+            procedimento_variavel(no_pai)
 
             tipo, valor, linha, coluna = getToken()
 
@@ -123,32 +134,30 @@ def procedimento_variaveis_linha() -> None:
         volta_token_anterior()
 
 
-def procedimento_variaveis() -> None:
-    print()
-    print('Procedimento das variaveis')
-    procedimento_variaveis_linha()
+def procedimento_variaveis(no_pai_anterior: Node) -> None:
+    pai = Node('variaveis', no_pai_anterior)
+
+    procedimento_variaveis_linha(pai)
 
 
-def procedimento_term() -> None:
-    print()
-    print('Procedimento term')
+def procedimento_term(raiz: Node) -> None:
+    no_pai = Node('term', raiz)
 
     tipo, valor, linha, coluna = getToken()
 
-    print(f'NO TERM(DEBUG): {tipo} e {valor}')
-
     if tipo == 'id':
-        print(tipo, valor)
+        Node(tipo, no_pai)
     elif tipo == 'numero':
-        print(tipo, valor)
+        Node(tipo, no_pai)
     elif tipo == 'caractere':
-        print(tipo, valor)
+        Node(tipo, no_pai)
     elif tipo == '(':
-        procedimento_expre()
+        Node(tipo, no_pai)
+        procedimento_expre(no_pai)
         tipo, valor, linha, coluna = getToken()
 
         if tipo == ')':
-            print(')')
+            Node(')', no_pai)
         else:
             gera_erro_sintatico('Era esperado um )', linha, coluna,
                                 'procedimento_term()',
@@ -160,157 +169,132 @@ def procedimento_term() -> None:
             f'{tipo} e {valor}')
 
 
-def procedimento_unario() -> None:
-    print()
-    print('Procedimento unario')
+def procedimento_unario(raiz: Node) -> None:
+    no_pai = Node('unario', raiz)
 
     tipo, valor, linha, coluna = getToken()
-    print(f'PROCEDIMENTO UNARIO (DEBUG): {tipo} e {valor}')
 
     if tipo == 'soma_sub':
-        print(tipo, valor)
-        procedimento_term()
+        Node(tipo, no_pai)
+        procedimento_term(no_pai)
     else:
         volta_token_anterior()
-        procedimento_term()
+        procedimento_term(no_pai)
 
 
-def procedimento_expre3_linha() -> None:
-    print()
-    print('Procedimento expre3_linha')
+def procedimento_expre3_linha(raiz: Node) -> None:
+    no_pai = Node("expre3'", raiz)
 
     tipo, valor, linha, coluna = getToken()
 
     while tipo in FIRST_DAS_TRANSICOES['expre3_linha']:
-        print(tipo)
-        procedimento_unario()
+        Node(tipo, no_pai)
+        procedimento_unario(no_pai)
 
         tipo, valor, linha, coluna = getToken()
-        print(f'DENTRO DO EXPRE3_LINHA(DEBUG): {tipo} e {valor}')
 
     volta_token_anterior()
 
 
-def procedimento_expre3() -> None:
-    print()
-    print('Procedimento expre3')
+def procedimento_expre3(raiz: Node) -> None:
+    no_pai = Node('expre3', raiz)
 
-    procedimento_unario()
+    procedimento_unario(no_pai)
 
-    tipo, valor, linha, coluna = getToken()
-    print(f'ANTES DO TERM(DEBUG): {tipo} e {valor}')
-    volta_token_anterior()
-
-    procedimento_expre3_linha()
+    procedimento_expre3_linha(no_pai)
 
 
-def procedimento_expre2_linha() -> None:
-    print()
-    print('Procedimento expre2_linha')
+def procedimento_expre2_linha(raiz: Node) -> None:
+    no_pai = Node("expre2'", raiz)
 
     tipo, valor, linha, coluna = getToken()
 
     while tipo in FIRST_DAS_TRANSICOES['expre2_linha']:
-        print(tipo)
-        procedimento_expre3()
+        Node(tipo, no_pai)
+        procedimento_expre3(no_pai)
 
         tipo, valor, linha, coluna = getToken()
 
     volta_token_anterior()
 
 
-def procedimento_expre2() -> None:
-    print()
-    print('Procedimento expre2')
+def procedimento_expre2(raiz: Node) -> None:
+    no_pai = Node('expre2', raiz)
 
-    procedimento_expre3()
-
-    tipo, valor, linha, coluna = getToken()
-    print(f'ANTES DO EXPRE3(DEBUG): {tipo} e {valor}')
-    volta_token_anterior()
-
-    procedimento_expre2_linha()
+    procedimento_expre3(no_pai)
+    procedimento_expre2_linha(no_pai)
 
 
-def procedimento_expre_linha() -> None:
-    print()
-    print('Procedimento expre_linha')
+def procedimento_expre_linha(raiz: Node) -> None:
+    no_pai = Node("expre'", raiz)
 
     tipo, valor, linha, coluna = getToken()
 
     while tipo in FIRST_DAS_TRANSICOES['expre_linha']:
-        print(tipo)
-        procedimento_expre2()
+        Node(tipo, no_pai)
+        procedimento_expre2(no_pai)
 
         tipo, valor, linha, coluna = getToken()
 
     volta_token_anterior()
 
 
-def procedimento_expre() -> None:
-    print()
-    print('Procedimento expre')
+def procedimento_expre(raiz: Node) -> None:
+    no_pai = Node('expre', raiz)
 
-    procedimento_expre2()
-    tipo, valor, linha, coluna = getToken()
-    print(f'ANTES DO EXPRE2(DEBUG): {tipo} e {valor}')
-    volta_token_anterior()
-    procedimento_expre_linha()
+    procedimento_expre2(no_pai)
+    procedimento_expre_linha(no_pai)
 
 
-def procedimento_cond() -> None:
-    print()
-    print('Procedimento cond')
+def procedimento_cond(raiz: Node) -> None:
+    no_pai = Node('cond', raiz)
 
-    procedimento_expre()
+    procedimento_expre(no_pai)
 
     tipo, valor, linha, coluna = getToken()
     if tipo == 'oprel':
-        print(tipo, valor)
+        Node(tipo, no_pai)
 
-        procedimento_expre()
+        procedimento_expre(no_pai)
     else:
         gera_erro_sintatico('Era esperado um operador relacional', linha, coluna)
 
 
-def procedimento_else_cmd() -> None:
-    print()
-    print('Prodimento else_cmd')
+def procedimento_else_cmd(raiz: Node) -> None:
+    no_pai = Node('else_cmd', raiz)
 
     tipo, valor, linha, coluna = getToken()
 
     if tipo == 'else':
-        print(tipo)
-        procedimento_cmd_bloco()
+        procedimento_cmd_bloco(no_pai)
     else:
         volta_token_anterior()
 
 
-def procedimento_cmd_rep() -> None:
-    print()
-    print('Procedimento cmd_rep')
+def procedimento_cmd_rep(raiz: Node) -> None:
+    no_pai = Node('cmd_rep', raiz)
 
     tipo, valor, linha, coluna = getToken()
 
     if tipo == 'while':
-        print(tipo)
-        procedimento_cond()
-        procedimento_cmd_bloco()
+        Node(tipo, no_pai)
+        procedimento_cond(no_pai)
+        procedimento_cmd_bloco(no_pai)
     elif tipo == 'repeat':
-        print(tipo)
-        procedimento_cmd_bloco()
+        Node(tipo, no_pai)
+        procedimento_cmd_bloco(no_pai)
 
         tipo, valor, linha, coluna = getToken()
 
         if tipo == 'until':
-            print(tipo)
+            Node(tipo, no_pai)
 
-            procedimento_cond()
+            procedimento_cond(no_pai)
 
             tipo, valor, linha, coluna = getToken()
 
             if tipo == 'pontuacao' and valor == 'PV':
-                print(';')
+                Node(';', no_pai)
             else:
                 gera_erro_sintatico('Era esperado um ponto e vírgula (;)', linha, coluna)
         else:
@@ -319,15 +303,17 @@ def procedimento_cmd_rep() -> None:
         gera_erro_sintatico('Era esperado um while ou repeat', linha, coluna)
 
 
-def procedimento_cmd_bloco() -> None:
+def procedimento_cmd_bloco(raiz: Node) -> None:
     tipo, valor, linha, coluna = getToken()
+
+    no_pai = Node('cmd_bloco', raiz)
 
     if tipo == 'begin':
         volta_token_anterior()
-        procedimento_bloco()
+        procedimento_bloco(no_pai)
     elif tipo in FIRST_DAS_TRANSICOES['cmd']:
         volta_token_anterior()
-        procedimento_cmd()
+        procedimento_cmd(no_pai)
     else:
         gera_erro_sintatico(
             'Era esperado um comando válido', linha, coluna,
@@ -335,47 +321,45 @@ def procedimento_cmd_bloco() -> None:
         )
 
 
-def procedimento_cmd_cond() -> None:
-    print()
-    print('Procedimento cmd_cond')
+def procedimento_cmd_cond(raiz: Node) -> None:
+    no_pai = Node('cmd_cond', raiz)
 
     tipo, valor, linha, coluna = getToken()
 
     if tipo == 'if':
-        print(tipo)
-        procedimento_cond()
+        Node(tipo, no_pai)
+        procedimento_cond(no_pai)
 
         tipo, valor, linha, coluna = getToken()
 
         if tipo == 'then':
-            print(tipo)
-            procedimento_cmd_bloco()
-            procedimento_else_cmd()
+            Node(tipo, no_pai)
+            procedimento_cmd_bloco(no_pai)
+            procedimento_else_cmd(no_pai)
         else:
             gera_erro_sintatico('Era esperado um then', linha, coluna)
     else:
         gera_erro_sintatico('Era esperado um if', linha, coluna)
 
 
-def procedimento_cmd_atrib() -> None:
-    print()
-    print('Procedimento cmd_atrib')
+def procedimento_cmd_atrib(raiz: Node) -> None:
+    no_pai = Node('cmd_atrib', raiz)
 
     tipo, valor, linha, coluna = getToken()
 
     if tipo == 'id':
-        print(tipo, valor)
+        Node(tipo, no_pai)
         tipo, valor, linha, coluna = getToken()
 
         if tipo == 'atribuicao':
-            print(':=')
+            Node(':=', no_pai)
 
-            procedimento_expre()  # Está retornando 2
+            procedimento_expre(no_pai)
 
             tipo, valor, linha, coluna = getToken()
 
             if tipo == 'pontuacao' and valor == 'PV':
-                print(';')
+                Node(';', no_pai)
             else:
                 gera_erro_sintatico('Era esperado ponto e vírugula (;)', linha, coluna,
                                     'procedimento_cmd_atrib()',
@@ -386,60 +370,65 @@ def procedimento_cmd_atrib() -> None:
         gera_erro_sintatico('Era esperado um variável', linha, coluna)
 
 
-def procedimento_cmd() -> None:
-    print()
-    print('Procedimento cmd')
+def procedimento_cmd(raiz: Node) -> None:
+    no_pai = Node('cmd', raiz)
 
     tipo, valor, linha, coluna = getToken()
 
-    while tipo in FIRST_DAS_TRANSICOES['cmd']:
+    if tipo in FIRST_DAS_TRANSICOES['cmd']:
         if tipo == 'id':
             volta_token_anterior()
-            procedimento_cmd_atrib()
+            procedimento_cmd_atrib(no_pai)
         elif tipo == 'if':
             volta_token_anterior()
-            procedimento_cmd_cond()
+            procedimento_cmd_cond(no_pai)
         elif tipo == 'while' or tipo == 'repeat':
             volta_token_anterior()
-            procedimento_cmd_rep()
+            procedimento_cmd_rep(no_pai)
 
         tipo, valor, linha, coluna = getToken()
 
     volta_token_anterior()
 
 
-def procedimento_cmds() -> None:
-    print()
-    print('Procedimento cmds')
+def procedimento_cmds_linha(raiz: Node) -> None:
+    no_pai = Node("cmds'", raiz)
 
+    tipo, valor, linha, coluna = getToken()
+
+    if tipo in FIRST_DAS_TRANSICOES['cmds']:
+        volta_token_anterior()
+        procedimento_cmds(no_pai)
+    else:
+        volta_token_anterior()
+
+
+def procedimento_cmds(raiz: Node) -> None:
     tipo, valor, linha, coluna = getToken()
 
     if tipo in FIRST_DAS_TRANSICOES['cmd']:
         volta_token_anterior()
-        procedimento_cmd()
+        no_pai = Node('cmds', raiz)
+        procedimento_cmd(no_pai)
+        procedimento_cmds_linha(no_pai)
     else:
         gera_erro_sintatico('Era esperado um comando válido', linha, coluna)
 
 
-def procedimento_bloco() -> None:
-    print()
-    print('Procedimento do bloco')
+def procedimento_bloco(raiz: Node) -> None:
+    raiz = Node('bloco', parent=raiz)
+
     tipo, valor, linha, coluna = getToken()
-    print(f'Imprimi algo 1: {tipo, valor}')
 
     if tipo == 'begin':
-        print(tipo)
-        print('#' * 30)
-        procedimento_variaveis()
+        Node(tipo, parent=raiz)
 
-        print('#' * 30)
-        procedimento_cmds()
+        procedimento_variaveis(raiz)
+        procedimento_cmds(raiz)
 
         tipo, valor, linha, coluna = getToken()
-        print(f'Imprimi algo 2: {tipo, valor}')
         if tipo == 'end':
-            print('end')
-            print('CHEGOU NO FINAL DO PROGRAMA')
+            Node(tipo, raiz)
         else:
             gera_erro_sintatico(
                 'Era esperado fechamento de bloco (end)', linha, coluna,
@@ -449,26 +438,32 @@ def procedimento_bloco() -> None:
         gera_erro_sintatico('Era esperado abertura de bloco (begin)', linha, coluna)
 
 
-def procedimento_call() -> None:
-    print()
-    print('Procedimento do call')
+def procedimento_call() -> Node:
+    raiz = Node('call')
+
     tipo, valor, linha, coluna = getToken()
 
     if tipo == 'program':
-        print(tipo)
+        Node('program', parent=raiz)
+
         tipo, valor, linha, coluna = getToken()
 
         if tipo == 'id':
-            print(tipo)
+            Node(tipo, parent=raiz, data=valor)
+
             tipo, valor, linha, coluna = getToken()
 
             if tipo == '(':
-                print(tipo)
+                Node(tipo, parent=raiz)
+
                 tipo, valor, linha, coluna = getToken()
 
                 if tipo == ')':
-                    print(tipo)
-                    procedimento_bloco()
+                    Node(tipo, parent=raiz)
+
+                    procedimento_bloco(raiz)
+
+                    return raiz
                 else:
                     gera_erro_sintatico('Era esperado fechamento de parenteses', linha, coluna)
             else:
@@ -479,9 +474,46 @@ def procedimento_call() -> None:
         gera_erro_sintatico('Era esperado a palavra reservada program', linha, coluna)
 
 
+def main(imprimir: bool = True, escrever_arvore_no_txt: bool = False, nome_do_arq: str = None) -> (float, [str]):
+    inicio = time()
+
+    raiz = procedimento_call()
+
+    demorou = time() - inicio
+
+    if escrever_arvore_no_txt:
+        if nome_do_arq is not None:
+            nome_base, extensao = os.path.splitext(nome_do_arq)
+
+            if extensao.lower() == '.txt':
+                with open(nome_do_arq, 'w', encoding='utf-8') as arq:
+                    for pre, _, node in RenderTree(raiz):
+                        arq.writelines(f'{pre}{node.name}\n')
+            else:
+                print('Erro: Precisa ser um arquivo com final .txt')
+        else:
+            print('Erro: Nome inválido')
+
+    if imprimir:
+        print('Código aceito')
+        print(f'Demorou: {demorou}')
+
+        print('Árvore de derivação:')
+        print()
+        for pre, _, node in RenderTree(raiz):
+            print(f'{pre}{node.name}')
+    else:
+        arvore = []
+
+        for pre, _, node in RenderTree(raiz):
+            arvore.append(f'{pre}{node.name}')
+
+        return demorou, arvore
+
+
 if __name__ == '__main__':
     abre_arquivo('testes/teste02.txt')
 
-    procedimento_call()
+    main()
 
     fecha_arquivo()

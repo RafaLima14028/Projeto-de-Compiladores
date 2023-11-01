@@ -1,12 +1,20 @@
 program teste_do_rafael()
 begin
     int: a, rafael;
-    float: b, f;
+    float: b, f, d;
+    char: oi, ra_2, _ra2_as, grafite;
+    int: fa;
 
     if a > 2 then
         rafael := 1;
     else
         rafael := 2;
+
+    if fa < rafael then
+        begin
+            int: rafael, alves, de, lima;
+            rafael := 23;
+        end
 
     { Esse é um comentario de teste > < = + - ^ 'A' }
 

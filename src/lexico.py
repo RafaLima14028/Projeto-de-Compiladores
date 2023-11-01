@@ -463,7 +463,7 @@ def getToken() -> (str, str, int, int):
     if final(estado):
         tipo = acoes(estado)
 
-        if re.match(r'^[\s\t\n]*$', nome_id) or (tipo[0] == '' and tipo[1] == ''):
+        if (tipo[0] == '' and tipo[1] == '') or re.match(r'^[\s\t\n]*$', nome_id):
             return getToken()
         else:
             return tipo[0], tipo[1], linha_inicio_token, coluna_inicio_token

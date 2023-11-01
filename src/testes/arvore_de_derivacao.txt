@@ -1,0 +1,381 @@
+call
+├── program
+├── id
+├── (
+├── )
+└── bloco
+    ├── begin
+    ├── variaveis
+    │   ├── variaveis'
+    │   │   └── variavel
+    │   │       ├── int
+    │   │       ├── :
+    │   │       ├── lista_ids
+    │   │       │   ├── id
+    │   │       │   └── lista_ids'
+    │   │       │       ├── ,
+    │   │       │       └── id
+    │   │       └── ;
+    │   ├── variaveis'
+    │   │   └── variavel
+    │   │       ├── float
+    │   │       ├── :
+    │   │       ├── lista_ids
+    │   │       │   ├── id
+    │   │       │   └── lista_ids'
+    │   │       │       ├── ,
+    │   │       │       ├── id
+    │   │       │       ├── ,
+    │   │       │       └── id
+    │   │       └── ;
+    │   ├── variaveis'
+    │   │   └── variavel
+    │   │       ├── char
+    │   │       ├── :
+    │   │       ├── lista_ids
+    │   │       │   ├── id
+    │   │       │   └── lista_ids'
+    │   │       │       ├── ,
+    │   │       │       ├── id
+    │   │       │       ├── ,
+    │   │       │       ├── id
+    │   │       │       ├── ,
+    │   │       │       └── id
+    │   │       └── ;
+    │   └── variaveis'
+    │       └── variavel
+    │           ├── int
+    │           ├── :
+    │           ├── lista_ids
+    │           │   ├── id
+    │           │   └── lista_ids'
+    │           └── ;
+    ├── cmds
+    │   ├── cmd
+    │   │   └── cmd_cond
+    │   │       ├── if
+    │   │       ├── cond
+    │   │       │   ├── expre
+    │   │       │   │   ├── expre2
+    │   │       │   │   │   ├── expre3
+    │   │       │   │   │   │   ├── unario
+    │   │       │   │   │   │   │   └── term
+    │   │       │   │   │   │   │       └── id
+    │   │       │   │   │   │   └── expre3'
+    │   │       │   │   │   └── expre2'
+    │   │       │   │   └── expre'
+    │   │       │   ├── oprel
+    │   │       │   └── expre
+    │   │       │       ├── expre2
+    │   │       │       │   ├── expre3
+    │   │       │       │   │   ├── unario
+    │   │       │       │   │   │   └── term
+    │   │       │       │   │   │       └── numero
+    │   │       │       │   │   └── expre3'
+    │   │       │       │   └── expre2'
+    │   │       │       └── expre'
+    │   │       ├── then
+    │   │       ├── cmd_bloco
+    │   │       │   └── cmd
+    │   │       │       └── cmd_atrib
+    │   │       │           ├── id
+    │   │       │           ├── :=
+    │   │       │           ├── expre
+    │   │       │           │   ├── expre2
+    │   │       │           │   │   ├── expre3
+    │   │       │           │   │   │   ├── unario
+    │   │       │           │   │   │   │   └── term
+    │   │       │           │   │   │   │       └── numero
+    │   │       │           │   │   │   └── expre3'
+    │   │       │           │   │   └── expre2'
+    │   │       │           │   └── expre'
+    │   │       │           └── ;
+    │   │       └── else_cmd
+    │   │           └── cmd_bloco
+    │   │               └── cmd
+    │   │                   └── cmd_atrib
+    │   │                       ├── id
+    │   │                       ├── :=
+    │   │                       ├── expre
+    │   │                       │   ├── expre2
+    │   │                       │   │   ├── expre3
+    │   │                       │   │   │   ├── unario
+    │   │                       │   │   │   │   └── term
+    │   │                       │   │   │   │       └── numero
+    │   │                       │   │   │   └── expre3'
+    │   │                       │   │   └── expre2'
+    │   │                       │   └── expre'
+    │   │                       └── ;
+    │   └── cmds'
+    │       └── cmds
+    │           ├── cmd
+    │           │   └── cmd_cond
+    │           │       ├── if
+    │           │       ├── cond
+    │           │       │   ├── expre
+    │           │       │   │   ├── expre2
+    │           │       │   │   │   ├── expre3
+    │           │       │   │   │   │   ├── unario
+    │           │       │   │   │   │   │   └── term
+    │           │       │   │   │   │   │       └── id
+    │           │       │   │   │   │   └── expre3'
+    │           │       │   │   │   └── expre2'
+    │           │       │   │   └── expre'
+    │           │       │   ├── oprel
+    │           │       │   └── expre
+    │           │       │       ├── expre2
+    │           │       │       │   ├── expre3
+    │           │       │       │   │   ├── unario
+    │           │       │       │   │   │   └── term
+    │           │       │       │   │   │       └── id
+    │           │       │       │   │   └── expre3'
+    │           │       │       │   └── expre2'
+    │           │       │       └── expre'
+    │           │       ├── then
+    │           │       ├── cmd_bloco
+    │           │       │   └── bloco
+    │           │       │       ├── begin
+    │           │       │       ├── variaveis
+    │           │       │       │   └── variaveis'
+    │           │       │       │       └── variavel
+    │           │       │       │           ├── int
+    │           │       │       │           ├── :
+    │           │       │       │           ├── lista_ids
+    │           │       │       │           │   ├── id
+    │           │       │       │           │   └── lista_ids'
+    │           │       │       │           │       ├── ,
+    │           │       │       │           │       ├── id
+    │           │       │       │           │       ├── ,
+    │           │       │       │           │       ├── id
+    │           │       │       │           │       ├── ,
+    │           │       │       │           │       └── id
+    │           │       │       │           └── ;
+    │           │       │       ├── cmds
+    │           │       │       │   ├── cmd
+    │           │       │       │   │   └── cmd_atrib
+    │           │       │       │   │       ├── id
+    │           │       │       │   │       ├── :=
+    │           │       │       │   │       ├── expre
+    │           │       │       │   │       │   ├── expre2
+    │           │       │       │   │       │   │   ├── expre3
+    │           │       │       │   │       │   │   │   ├── unario
+    │           │       │       │   │       │   │   │   │   └── term
+    │           │       │       │   │       │   │   │   │       └── numero
+    │           │       │       │   │       │   │   │   └── expre3'
+    │           │       │       │   │       │   │   └── expre2'
+    │           │       │       │   │       │   └── expre'
+    │           │       │       │   │       └── ;
+    │           │       │       │   └── cmds'
+    │           │       │       └── end
+    │           │       └── else_cmd
+    │           └── cmds'
+    │               └── cmds
+    │                   ├── cmd
+    │                   │   └── cmd_rep
+    │                   │       ├── repeat
+    │                   │       ├── cmd_bloco
+    │                   │       │   └── cmd
+    │                   │       │       └── cmd_atrib
+    │                   │       │           ├── id
+    │                   │       │           ├── :=
+    │                   │       │           ├── expre
+    │                   │       │           │   ├── expre2
+    │                   │       │           │   │   ├── expre3
+    │                   │       │           │   │   │   ├── unario
+    │                   │       │           │   │   │   │   └── term
+    │                   │       │           │   │   │   │       └── caractere
+    │                   │       │           │   │   │   └── expre3'
+    │                   │       │           │   │   └── expre2'
+    │                   │       │           │   └── expre'
+    │                   │       │           └── ;
+    │                   │       ├── until
+    │                   │       ├── cond
+    │                   │       │   ├── expre
+    │                   │       │   │   ├── expre2
+    │                   │       │   │   │   ├── expre3
+    │                   │       │   │   │   │   ├── unario
+    │                   │       │   │   │   │   │   └── term
+    │                   │       │   │   │   │   │       └── numero
+    │                   │       │   │   │   │   └── expre3'
+    │                   │       │   │   │   └── expre2'
+    │                   │       │   │   └── expre'
+    │                   │       │   ├── oprel
+    │                   │       │   └── expre
+    │                   │       │       ├── expre2
+    │                   │       │       │   ├── expre3
+    │                   │       │       │   │   ├── unario
+    │                   │       │       │   │   │   └── term
+    │                   │       │       │   │   │       └── numero
+    │                   │       │       │   │   └── expre3'
+    │                   │       │       │   └── expre2'
+    │                   │       │       └── expre'
+    │                   │       └── ;
+    │                   └── cmds'
+    │                       └── cmds
+    │                           ├── cmd
+    │                           │   └── cmd_atrib
+    │                           │       ├── id
+    │                           │       ├── :=
+    │                           │       ├── expre
+    │                           │       │   ├── expre2
+    │                           │       │   │   ├── expre3
+    │                           │       │   │   │   ├── unario
+    │                           │       │   │   │   │   └── term
+    │                           │       │   │   │   │       ├── (
+    │                           │       │   │   │   │       ├── expre
+    │                           │       │   │   │   │       │   ├── expre2
+    │                           │       │   │   │   │       │   │   ├── expre3
+    │                           │       │   │   │   │       │   │   │   ├── unario
+    │                           │       │   │   │   │       │   │   │   │   └── term
+    │                           │       │   │   │   │       │   │   │   │       └── numero
+    │                           │       │   │   │   │       │   │   │   └── expre3'
+    │                           │       │   │   │   │       │   │   │       ├── exp
+    │                           │       │   │   │   │       │   │   │       └── unario
+    │                           │       │   │   │   │       │   │   │           └── term
+    │                           │       │   │   │   │       │   │   │               └── numero
+    │                           │       │   │   │   │       │   │   └── expre2'
+    │                           │       │   │   │   │       │   └── expre'
+    │                           │       │   │   │   │       └── )
+    │                           │       │   │   │   └── expre3'
+    │                           │       │   │   └── expre2'
+    │                           │       │   └── expre'
+    │                           │       └── ;
+    │                           └── cmds'
+    │                               └── cmds
+    │                                   ├── cmd
+    │                                   │   └── cmd_atrib
+    │                                   │       ├── id
+    │                                   │       ├── :=
+    │                                   │       ├── expre
+    │                                   │       │   ├── expre2
+    │                                   │       │   │   ├── expre3
+    │                                   │       │   │   │   ├── unario
+    │                                   │       │   │   │   │   └── term
+    │                                   │       │   │   │   │       └── numero
+    │                                   │       │   │   │   └── expre3'
+    │                                   │       │   │   │       ├── exp
+    │                                   │       │   │   │       └── unario
+    │                                   │       │   │   │           ├── soma_sub
+    │                                   │       │   │   │           └── term
+    │                                   │       │   │   │               └── numero
+    │                                   │       │   │   └── expre2'
+    │                                   │       │   └── expre'
+    │                                   │       └── ;
+    │                                   └── cmds'
+    │                                       └── cmds
+    │                                           ├── cmd
+    │                                           │   └── cmd_rep
+    │                                           │       ├── while
+    │                                           │       ├── cond
+    │                                           │       │   ├── expre
+    │                                           │       │   │   ├── expre2
+    │                                           │       │   │   │   ├── expre3
+    │                                           │       │   │   │   │   ├── unario
+    │                                           │       │   │   │   │   │   └── term
+    │                                           │       │   │   │   │   │       └── id
+    │                                           │       │   │   │   │   └── expre3'
+    │                                           │       │   │   │   └── expre2'
+    │                                           │       │   │   └── expre'
+    │                                           │       │   ├── oprel
+    │                                           │       │   └── expre
+    │                                           │       │       ├── expre2
+    │                                           │       │       │   ├── expre3
+    │                                           │       │       │   │   ├── unario
+    │                                           │       │       │   │   │   └── term
+    │                                           │       │       │   │   │       ├── (
+    │                                           │       │       │   │   │       ├── expre
+    │                                           │       │       │   │   │       │   ├── expre2
+    │                                           │       │       │   │   │       │   │   ├── expre3
+    │                                           │       │       │   │   │       │   │   │   ├── unario
+    │                                           │       │       │   │   │       │   │   │   │   └── term
+    │                                           │       │       │   │   │       │   │   │   │       └── numero
+    │                                           │       │       │   │   │       │   │   │   └── expre3'
+    │                                           │       │       │   │   │       │   │   └── expre2'
+    │                                           │       │       │   │   │       │   └── expre'
+    │                                           │       │       │   │   │       │       ├── soma_sub
+    │                                           │       │       │   │   │       │       └── expre2
+    │                                           │       │       │   │   │       │           ├── expre3
+    │                                           │       │       │   │   │       │           │   ├── unario
+    │                                           │       │       │   │   │       │           │   │   └── term
+    │                                           │       │       │   │   │       │           │   │       └── numero
+    │                                           │       │       │   │   │       │           │   └── expre3'
+    │                                           │       │       │   │   │       │           └── expre2'
+    │                                           │       │       │   │   │       └── )
+    │                                           │       │       │   │   └── expre3'
+    │                                           │       │       │   └── expre2'
+    │                                           │       │       └── expre'
+    │                                           │       └── cmd_bloco
+    │                                           │           └── bloco
+    │                                           │               ├── begin
+    │                                           │               ├── variaveis
+    │                                           │               │   └── variaveis'
+    │                                           │               │       └── variavel
+    │                                           │               │           ├── int
+    │                                           │               │           ├── :
+    │                                           │               │           ├── lista_ids
+    │                                           │               │           │   ├── id
+    │                                           │               │           │   └── lista_ids'
+    │                                           │               │           │       ├── ,
+    │                                           │               │           │       └── id
+    │                                           │               │           └── ;
+    │                                           │               ├── cmds
+    │                                           │               │   ├── cmd
+    │                                           │               │   │   └── cmd_cond
+    │                                           │               │   │       ├── if
+    │                                           │               │   │       ├── cond
+    │                                           │               │   │       │   ├── expre
+    │                                           │               │   │       │   │   ├── expre2
+    │                                           │               │   │       │   │   │   ├── expre3
+    │                                           │               │   │       │   │   │   │   ├── unario
+    │                                           │               │   │       │   │   │   │   │   └── term
+    │                                           │               │   │       │   │   │   │   │       └── id
+    │                                           │               │   │       │   │   │   │   └── expre3'
+    │                                           │               │   │       │   │   │   └── expre2'
+    │                                           │               │   │       │   │   └── expre'
+    │                                           │               │   │       │   ├── oprel
+    │                                           │               │   │       │   └── expre
+    │                                           │               │   │       │       ├── expre2
+    │                                           │               │   │       │       │   ├── expre3
+    │                                           │               │   │       │       │   │   ├── unario
+    │                                           │               │   │       │       │   │   │   └── term
+    │                                           │               │   │       │       │   │   │       └── numero
+    │                                           │               │   │       │       │   │   └── expre3'
+    │                                           │               │   │       │       │   └── expre2'
+    │                                           │               │   │       │       └── expre'
+    │                                           │               │   │       ├── then
+    │                                           │               │   │       ├── cmd_bloco
+    │                                           │               │   │       │   └── cmd
+    │                                           │               │   │       │       └── cmd_atrib
+    │                                           │               │   │       │           ├── id
+    │                                           │               │   │       │           ├── :=
+    │                                           │               │   │       │           ├── expre
+    │                                           │               │   │       │           │   ├── expre2
+    │                                           │               │   │       │           │   │   ├── expre3
+    │                                           │               │   │       │           │   │   │   ├── unario
+    │                                           │               │   │       │           │   │   │   │   ├── soma_sub
+    │                                           │               │   │       │           │   │   │   │   └── term
+    │                                           │               │   │       │           │   │   │   │       └── numero
+    │                                           │               │   │       │           │   │   │   └── expre3'
+    │                                           │               │   │       │           │   │   └── expre2'
+    │                                           │               │   │       │           │   └── expre'
+    │                                           │               │   │       │           └── ;
+    │                                           │               │   │       └── else_cmd
+    │                                           │               │   │           └── cmd_bloco
+    │                                           │               │   │               └── cmd
+    │                                           │               │   │                   └── cmd_atrib
+    │                                           │               │   │                       ├── id
+    │                                           │               │   │                       ├── :=
+    │                                           │               │   │                       ├── expre
+    │                                           │               │   │                       │   ├── expre2
+    │                                           │               │   │                       │   │   ├── expre3
+    │                                           │               │   │                       │   │   │   ├── unario
+    │                                           │               │   │                       │   │   │   │   └── term
+    │                                           │               │   │                       │   │   │   │       └── numero
+    │                                           │               │   │                       │   │   │   └── expre3'
+    │                                           │               │   │                       │   │   └── expre2'
+    │                                           │               │   │                       │   └── expre'
+    │                                           │               │   │                       └── ;
+    │                                           │               │   └── cmds'
+    │                                           │               └── end
+    │                                           └── cmds'
+    └── end
