@@ -5,8 +5,6 @@ from anytree import Node, RenderTree
 
 from lexico import getToken, volta_token_anterior, abre_arquivo, fecha_arquivo
 
-ARVORE = None
-
 FIRST_DAS_TRANSICOES = {
     'call': ['program'],
     'bloco': ['begin'],
@@ -65,6 +63,7 @@ def procedimento_lista_ids_linha(raiz: Node) -> None:
 
                 if tipo == 'id':
                     Node(tipo, no_pai)
+
                     tipo, valor, linha, coluna = getToken()
 
                     if tipo == 'pontuacao' and valor == 'VR':
@@ -72,9 +71,7 @@ def procedimento_lista_ids_linha(raiz: Node) -> None:
                 else:
                     gera_erro_sintatico('Era esperado um nome para a variável depois da ,', linha, coluna)
 
-        volta_token_anterior()
-    else:
-        volta_token_anterior()
+    volta_token_anterior()
 
 
 def procedimento_lista_ids(raiz: Node) -> None:
@@ -84,6 +81,7 @@ def procedimento_lista_ids(raiz: Node) -> None:
 
     if tipo == 'id':
         Node(tipo, parent=no_pai)
+
         procedimento_lista_ids_linha(no_pai)
     else:
         gera_erro_sintatico('Era esperado um nome para a variável', linha, coluna)
@@ -124,14 +122,14 @@ def procedimento_variaveis_linha(raiz: Node) -> None:
     if tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
         while tipo in FIRST_DAS_TRANSICOES['variaveis_linha']:
             no_pai = Node("variaveis'", raiz)
+
             volta_token_anterior()
+
             procedimento_variavel(no_pai)
 
             tipo, valor, linha, coluna = getToken()
 
-        volta_token_anterior()
-    else:
-        volta_token_anterior()
+    volta_token_anterior()
 
 
 def procedimento_variaveis(no_pai_anterior: Node) -> None:
@@ -153,7 +151,9 @@ def procedimento_term(raiz: Node) -> None:
         Node(tipo, no_pai)
     elif tipo == '(':
         Node(tipo, no_pai)
+
         procedimento_expre(no_pai)
+
         tipo, valor, linha, coluna = getToken()
 
         if tipo == ')':
@@ -176,9 +176,11 @@ def procedimento_unario(raiz: Node) -> None:
 
     if tipo == 'soma_sub':
         Node(tipo, no_pai)
+
         procedimento_term(no_pai)
     else:
         volta_token_anterior()
+
         procedimento_term(no_pai)
 
 
@@ -189,6 +191,7 @@ def procedimento_expre3_linha(raiz: Node) -> None:
 
     while tipo in FIRST_DAS_TRANSICOES['expre3_linha']:
         Node(tipo, no_pai)
+
         procedimento_unario(no_pai)
 
         tipo, valor, linha, coluna = getToken()
@@ -200,7 +203,6 @@ def procedimento_expre3(raiz: Node) -> None:
     no_pai = Node('expre3', raiz)
 
     procedimento_unario(no_pai)
-
     procedimento_expre3_linha(no_pai)
 
 
@@ -211,6 +213,7 @@ def procedimento_expre2_linha(raiz: Node) -> None:
 
     while tipo in FIRST_DAS_TRANSICOES['expre2_linha']:
         Node(tipo, no_pai)
+
         procedimento_expre3(no_pai)
 
         tipo, valor, linha, coluna = getToken()
@@ -232,6 +235,7 @@ def procedimento_expre_linha(raiz: Node) -> None:
 
     while tipo in FIRST_DAS_TRANSICOES['expre_linha']:
         Node(tipo, no_pai)
+
         procedimento_expre2(no_pai)
 
         tipo, valor, linha, coluna = getToken()
@@ -252,6 +256,7 @@ def procedimento_cond(raiz: Node) -> None:
     procedimento_expre(no_pai)
 
     tipo, valor, linha, coluna = getToken()
+
     if tipo == 'oprel':
         Node(tipo, no_pai)
 
@@ -278,10 +283,12 @@ def procedimento_cmd_rep(raiz: Node) -> None:
 
     if tipo == 'while':
         Node(tipo, no_pai)
+
         procedimento_cond(no_pai)
         procedimento_cmd_bloco(no_pai)
     elif tipo == 'repeat':
         Node(tipo, no_pai)
+
         procedimento_cmd_bloco(no_pai)
 
         tipo, valor, linha, coluna = getToken()
@@ -310,9 +317,11 @@ def procedimento_cmd_bloco(raiz: Node) -> None:
 
     if tipo == 'begin':
         volta_token_anterior()
+
         procedimento_bloco(no_pai)
     elif tipo in FIRST_DAS_TRANSICOES['cmd']:
         volta_token_anterior()
+
         procedimento_cmd(no_pai)
     else:
         gera_erro_sintatico(
@@ -328,12 +337,14 @@ def procedimento_cmd_cond(raiz: Node) -> None:
 
     if tipo == 'if':
         Node(tipo, no_pai)
+
         procedimento_cond(no_pai)
 
         tipo, valor, linha, coluna = getToken()
 
         if tipo == 'then':
             Node(tipo, no_pai)
+
             procedimento_cmd_bloco(no_pai)
             procedimento_else_cmd(no_pai)
         else:
@@ -349,6 +360,7 @@ def procedimento_cmd_atrib(raiz: Node) -> None:
 
     if tipo == 'id':
         Node(tipo, no_pai)
+
         tipo, valor, linha, coluna = getToken()
 
         if tipo == 'atribuicao':
@@ -376,14 +388,13 @@ def procedimento_cmd(raiz: Node) -> None:
     tipo, valor, linha, coluna = getToken()
 
     if tipo in FIRST_DAS_TRANSICOES['cmd']:
+        volta_token_anterior()
+
         if tipo == 'id':
-            volta_token_anterior()
             procedimento_cmd_atrib(no_pai)
         elif tipo == 'if':
-            volta_token_anterior()
             procedimento_cmd_cond(no_pai)
         elif tipo == 'while' or tipo == 'repeat':
-            volta_token_anterior()
             procedimento_cmd_rep(no_pai)
 
         tipo, valor, linha, coluna = getToken()
@@ -398,6 +409,7 @@ def procedimento_cmds_linha(raiz: Node) -> None:
 
     if tipo in FIRST_DAS_TRANSICOES['cmds']:
         volta_token_anterior()
+
         procedimento_cmds(no_pai)
     else:
         volta_token_anterior()
@@ -409,6 +421,7 @@ def procedimento_cmds(raiz: Node) -> None:
     if tipo in FIRST_DAS_TRANSICOES['cmd']:
         volta_token_anterior()
         no_pai = Node('cmds', raiz)
+
         procedimento_cmd(no_pai)
         procedimento_cmds_linha(no_pai)
     else:
@@ -427,6 +440,7 @@ def procedimento_bloco(raiz: Node) -> None:
         procedimento_cmds(raiz)
 
         tipo, valor, linha, coluna = getToken()
+
         if tipo == 'end':
             Node(tipo, raiz)
         else:
